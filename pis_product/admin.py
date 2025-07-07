@@ -6,7 +6,7 @@ from pis_product.models import ProductDetail
 from pis_product.models import PurchasedProduct
 from pis_product.models import ExtraItems
 from pis_product.models import ClaimedProduct
-from pis_product.models import StockIn,StockOut, Category, SubCategory, Itemsbysupplier, Avancesbon, Supplier, Mark, Returned, PaymentSupplier, Avoirsupp, PaymentClient, Clientprice, Supplierprice, Outcaisse, Outcaisseext, Outbank
+from pis_product.models import StockIn,StockOut, Category, SubCategory, Itemsbysupplier, Avancesbon, Supplier, Mark, Returned, PaymentSupplier, Avoirsupp, PaymentClient, Clientprice, Supplierprice, Outcaisse, Outcaisseext, Outbank, Facture, Outfacture, Devisitems
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
@@ -156,3 +156,14 @@ admin.site.register(Supplierprice)
 admin.site.register(Outcaisse)
 admin.site.register(Outcaisseext)
 admin.site.register(Outbank)
+admin.site.register(Facture)
+admin.site.register(Outfacture)
+admin.site.register(Devisitems)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)
+# admin.site.register(Outbank)

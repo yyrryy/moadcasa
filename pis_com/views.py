@@ -8,7 +8,7 @@ from django.views.generic import TemplateView, RedirectView, UpdateView
 from django.views.generic import FormView, ListView
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.utils import timezone
 
 from pis_com.models import Customer
@@ -19,6 +19,7 @@ from pis_retailer.forms import RetailerForm, RetailerUserForm
 # import render
 from django.shortcuts import render, redirect
 from pis_product.models import Product, Category
+from pis_sales.models import SalesHistory
 import shutil
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -171,6 +172,7 @@ class HomePageView(ListView):
             'totalproducts':Product.objects.all().count(),
             'totalclients':Customer.objects.all().count(),
             'totalsoldclients':Customer.objects.aggregate(total=Sum('rest'))['total'] or 0,
+            'notpaid':SalesHistory.objects.filter(paid_amount__lt=F('grand_total')).count(),
             'sales_count': sales.count(),
             'sales_sum': (
                 int(sales_sum.get('total_sales')) if

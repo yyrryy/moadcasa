@@ -9,151 +9,9 @@
 
 </style>
 
-<!-- add supplier -->
-<div class="shadow-lg d-none bg-white p-2 rounded position-absolute addsupplierholder"style="right:0; width:40vw; top:0; height: 100vh; z-index:999;">
-    <div class="bg-primary text-white d-flex justify-content-between">
-        <h2>
-            Ajouter Fournisseur
-        </h2>
-        <button onclick="$('.addsupplierholder').addClass('d-none')">X</button>
-    </div>
-
-        <br>
-        <label>
-            <strong>Nom (*)</strong>
-        </label>
-        <input type="text" class="form-control notempty" name="name" required>
-        <br>
-        <label>
-            <strong>Phone1 (*)</strong>
-        </label>
-        <input type="number" class="form-control notempty" name="phone1" required>
-        <br>
-        <label>
-            <strong>phone2</strong>
-        </label>
-        <input type="text" class="form-control" name="phone2">
-        <br>
-        <label>
-            <strong>Address</strong>
-        </label>
-        <input type="text" class="form-control" name="address">
-        <br>
-        <label>
-            <strong>Website</strong>
-        </label>
-        <input type="text" class="form-control" name="website">
-        <br>
-        <button class="btn w-100 btn-success addsuppliersubmitbtn">Ajouter</button>
-</div>
-
-<!-- add product -->
-<div class="container position-absolute bg-white addproductholder shadow-lg d-none rounded" style="right:0; width: 60vw;top:0; height: 100vh; z-index: 99;">
-    <div class="border p-3 ">
-        <div class="bg-primary d-flex justify-content-between">
-            <h3 class="text-center border-bottom text-white p-2">
-                Ajouter un produitx
-            </h3>
-            <button onclick="$('.addproductholder').toggleClass('d-none')">X</button>
-        </div>
-        <form method="post" action="{% url 'product:addoneproduct' %}" class="addoneproductform">
-            {% csrf_token %}
-            <div class="row">
-                <div class="mb-3 col-6">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <strong for="">Categorie (*)</strong>
-                        <div class="addcategory col-4 d-none">
-                            <div class="my-1">
-                            <div class="input-group">
-                                <input type="text" class="form-control addcategoryinput" placeholder="Category">
-                                <div class="input-group-prepend">
-                                <div class="input-group-text" onclick="addcategoryajax(event)">+</div>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        <span class="btn me-3 border" onclick="$('.addcategory').toggleClass('d-none');$('.addcategoryinput').focus()">+</span>
-                        <!-- <span class="fa fa-refresh btn btn-dark me-3 border refreshmark"></span> -->
-                    </div>
-                    <select style="width: 100%;" class="form-select checkref select2 notempty" name="category">
-                        <option value=""></option>
-                        {% for i in children %}
-                        <option value="{{i.id}}">
-                            {{i.name.upper}}
-                        </option>
-                        {% endfor %}
-                    </select>
-
-                </div>
-                <div class="col-6">
-                    <div class="d-flex align-items-center justify-content-between">
-                      <strong>
-                        Marque (*)
-                      </strong>
-                      <div class="addmark col-4 d-none">
-                          <div class="my-1">
-                            <div class="input-group">
-                                <input type="text" class="form-control addmarkinput" placeholder="Marque">
-                                <div class="input-group-prepend">
-                                  <div class="input-group-text" onclick="addmarkajax(event)">+</div>
-                                </div>
-                            </div>
-                          </div>
-                      </div>
-                        <span class="btn me-3 border" onclick="$('.addmark').toggleClass('d-none');$('.addmarkinput').focus()">+</span>
-                        <!-- <span class="fa fa-refresh btn btn-dark me-3 refreshmark"></span> -->
-                    </div>
-                    <select style="width: 100%;" class="form-select checkref markselect select2 notempty" type="text" name="mark">
-                        <option value=""></option>
-                        {% for i in marks %}
-                        <option value="{{i.id}}">
-                            {{i.name.upper}}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-
-            <div class="row">
-                <div class="col-md-6
-                mb-3">
-                    <b class="text-center text-danger checkerror d-none">
-                        Deja existé
-                    </b>
-                    <div>
-                        <strong>
-                            Ref. (*)
-                        </strong>
-                        <input class="form-control checkref notempty" type="text" name="ref" >
-                    </div>
-
-                </div>
-                <div class="col-md-6
-                mb-3">
-                    <strong>
-                        Designation (*)
-                    </strong>
-                    <input  class="form-control notempty" type="text" name="car" >
-                </div>
-            </div>
-            <!-- <div class="mb-3">
-                <strong>
-                    Article
-                </strong>
-                <input class="form-control" required type="text" name="name" >
-            </div> -->
 
 
 
-
-        <input type="hidden" name="dest" value="receive">
-        <button type="submit" class="btn btn-primary addoneproductbtn" disabled onclick="addoneproduct(event)">Ajouter</button>
-
-        </form>
-
-    </div>
-</div>
 
 
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -224,26 +82,72 @@
             </div>
 
         </div>
+
+        <div class="rounded p-2 bg-white shadow mt-2">
+            <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
+                +
+            </button>
+            <select class="productslist form-control"></select>
+
+            <div>
+                Stock: <span class="pdctselectedstock"></span>
+            </div>
+    
+            <div>
+                Dernier prix d'achat: <span class="pdctselecedprachat"></span>
+            </div>
+            <hr>
+                <div class="form-group">
+
+                    <label for="name" class="form-label">Quantité</label>
+                    <input type="number" class="addqtyinp form-control" placeholder="Qty">
+
+                    <div class="addstock"></div>
+                </div>
+                <div class="form-group">
+
+                    <label for="name" class="form-label">Prix</label>
+                    <input type="number" class="addpriceinp form-control" placeholder="Prix">
+
+                    <div class="addprice">  </div>
+                    <div class="addprnet"></div>
+                </div>
+                <div class="form-group">
+
+                    <label for="name" class="form-label">Remise</label>
+                    <input type="number" class="addremiseinp form-control" placeholder="Remise">
+                    <div class="addremise">  </div>
+                    <div class="addprnet"></div>
+                </div>
+
+                <div class="form-group">
+
+                    <label for="name" class="form-label">Prix vente mag</label>
+                    <input type="number" class="addprventemaginp form-control" placeholder="prventemag">
+                    <div class="addprventemag">  </div>
+                    <div class="addprnet"></div>
+                </div>
+                <div class="form-group">
+
+                    <label for="name" class="form-label">Prix vente gro</label>
+                    <input type="number" class="addprventegroinp form-control" placeholder="prventegro">
+                    <div class="addprventegro">  </div>
+                    <div class="addprnet"></div>
+                </div>
+                <div class="col-12">
+
+                    <button class="btn btn-primary w-100 addbtn" onclick="addrow()">+</button>
+                </div>
+                <input type="text" class="addname" hidden>
+        </div>
+
     </div>
 
     <div class="col-9">
         <div class="bg-white rounded shadow p-2">
             <div class="mb-3 d-flex justify-content-between">
 
-                <div class="col-6 d-flex">
-                    <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
-                        +
-                    </button>
-                    <select class="productslist form-control"></select>
-                </div>
-
-                <div>
-                    Stock: <span class="pdctselectedstock"></span>
-                </div>
-
-                <div>
-                    Dernier prix d'achat: <span class="pdctselecedprachat"></span>
-                </div>
+                
 
             </div>
                 <!-- button for addsupplier modal -->
@@ -316,6 +220,117 @@
 <script src="{% static 'js/jquery.invoice.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/jquery.scannerdetection.js' %}"></script>
     <script>
+        $('.productslist').on('change', function(){
+            // get product client id
+            let [ref, car, p, stock, productid, remise, prnet]=$(this).val().split('§')
+            // get supplier price
+            idsinbon=JSON.parse(localStorage.getItem('pdctsinbonsortieachat')) || []
+            if (idsinbon.includes(productid)){
+                alertify.error('Deja ajouté')
+            }
+            $('.pdctselectedstock').text(stock)
+            $('.pdctselecedprachat').text(p)
+            // else{
+            // $('.itemsbon').prepend(`<tr class="item-row">
+            //         <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${ref} - ${car}</div></div></td>
+
+            //         <td><input class="form-control qty calculate" placeholder="Quantity" type="number" onkeyup="saverow(event)"></td>
+            //         <td><input class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)"> </td>
+            //         <td><input class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)"> </td>
+            //         <td><span class="total">0.00</span></td>
+            //         <td><input class="form-control prventmag" placeholder="Pr. vente. mag" type="number" step=0.01 onkeyup="saverow(event)"> </td>
+            //         <td><input class="form-control prventgro" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)"> </td>
+            //         <input type="hidden" class="productid" value=${productid}><td><i class="btn btn-danger delete" title="Supprimer" onclick="removeline(event, '${productid}')">X</i></td>
+            //         </tr>`);
+
+            //     calculate()
+            // // add product row with client rice
+            // }
+
+        })
+        
+        function addrow(){
+            pdcts=JSON.parse(localStorage.getItem('pdctsinbonsortieachat'))||[]
+            bonitems=JSON.parse(localStorage.getItem('bonitemsachat'))||[]
+            grandtotal=parseFloat(localStorage.getItem('grandtotal')) || 0
+            
+            parentdiv=$(this).parent().parent()
+            if ($('.productslist').val()==''){
+                return
+            }
+            var [ref, car, pr_achat, stock, id, remise, prnet] = $('.productslist').val().split('§');
+            if (pdcts.includes(id)){
+                alertify.error('Deja ajouté')
+                return
+            }
+             // first time adding to localstorg
+             $('.pdctselectedstock').text(stock)
+             $('.pdctselecedprachat').text(pr_achat)
+            qtyinpadd=$('.addqtyinp').val()
+            priceinpadd=$('.addpriceinp').val()
+            remiseinpadd=$('.addremiseinp').val()
+            prventemag=$('.addprventemaginp').val()
+            prventegro=$('.addprventegroinp').val()
+            net=parseFloat(priceinpadd)-(parseFloat(priceinpadd)*parseFloat(remiseinpadd)/100)
+            if (qtyinpadd=='' || priceinpadd==''){
+                alertify.error('Champ vide')
+                return
+            }
+            totalrow=(qtyinpadd*net).toFixed(2)
+            grandtotal+=parseFloat(totalrow)
+            localStorage.setItem('grandtotal', grandtotal)
+            $('#grandTotal').text(grandtotal.toFixed(2))
+        console.log('>> total', totalrow)
+          row={
+                'article':ref+ ' - '+car,
+                'stock':stock,
+                'prnet':prnet,
+                'prachat':pr_achat,
+                'price':priceinpadd,
+                'remise':remiseinpadd,
+                'qty':qtyinpadd,
+                'productid':id,
+                'total':totalrow,
+                'prventemag':prventemag,
+                'prventegro':prventegro,
+                'prices':[(parseFloat(priceinpadd)*parseInt(qtyinpadd)).toFixed(2)]
+            }
+        
+            pdcts.push(id)
+            localStorage.setItem('pdctsinbonsortieachat', JSON.stringify(pdcts))
+            // add it to items localstorage
+            console.log(bonitems)
+            bonitems.push(row)
+            localStorage.setItem('bonitemsachat',JSON.stringify(bonitems))
+            $('.itemsbon').prepend(`<tr class="item-row">
+                    <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${ref} - ${car}</div></div></td>
+                    <td><input class="form-control qty calculate" placeholder="Quantity" type="number" onkeyup="saverow(event)" value="${qtyinpadd}"></td>
+                    <td><input class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)" value="${priceinpadd}"> </td>
+                    <td><input class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)" value="${remiseinpadd}"> </td>
+                    <td><span class="total">${totalrow}</span></td>
+                    <td><input class="form-control prventmag" placeholder="Pr. vente. mag" type="number" step=0.01 onkeyup="saverow(event)" value="${prventemag}"> </td>
+                    <td><input class="form-control prventgro" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)" value="${prventegro}"> </td>
+                    <input type="hidden" class="productid" value=${id}><td><i class="btn btn-danger delete" title="Supprimer" onclick="removeline(event, '${id}')">X</i></td>
+                    </tr>`);
+
+            calculate()
+            // add product row with client rice
+            
+            //jQuery().invoice().init
+            $('.productslist').empty()
+            $('.productslist').select2('open'); //open
+            $('.addqtyinp').val('')
+            $('.addpriceinp').val('')
+            $('.addstock').text('')
+            $('.addprnet').text('')
+            // updatestock
+            
+        
+
+
+        }
+
+        
         function removeline(event, productid){
             console.log('deletting;;;', productid)
             $(event.target).closest('tr').remove();
@@ -328,35 +343,16 @@
             console.log(dx, idsinbon, bonitems)
             localStorage.setItem('bonitemsachat', JSON.stringify(bonitems))
             localStorage.setItem('pdctsinbonsortieachat', JSON.stringify(idsinbon))
+            sum=0
+            $('.total').each(function() {
+                sum += parseFloat($(this).text());
+            });
+            $('#grandTotal').text(sum.toFixed(2))
+            localStorage.setItem('grandtotal', sum.toFixed(2))
 
         }
 
-        bonitems=JSON.parse(localStorage.getItem('bonitemsachat')) || []
-        for (i of bonitems){
-            $('.itemsbon').prepend(`<tr class="item-row">
-                    <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${i.article}</div></div></td>
-
-                    <td><input class="form-control qty calculate" placeholder="Quantity" type="number"
-                    value="${i.qty}"
-                    onkeyup="saverow(event)"></td>
-                    <td>
-                        <input
-                        value="${i.price}"
-                        class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <td><input
-                        value="${i.remise}"
-                        class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <td><span class="total">${i.total}</span></td>
-                    <td><input class="form-control prventmag" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)" value="${i.prventmag}"> </td>
-                    <td><input class="form-control prventgro" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)" value="${i.prventgro}"> </td>
-                    <input type="hidden" class="productid" value=${i.productid}><td><i class="btn btn-danger delete" title="Supprimer" onclick="removeline(event, '${i.productid}')">X</i></td>
-                    </tr>`);
-
-        calculate()
-        }
-
-        grandtotal=localStorage.getItem('grandtotal') || 0
-        $('#grandTotal').text(grandtotal)
+        
         function saverow(event){
             console.log('saving row')
             tr=$(event.target).parent().parent()
@@ -464,33 +460,6 @@
         // $(function(){
         //
         // })
-        $('.productslist').on('change', function(){
-            // get product client id
-            let [ref, car, p, stock, productid, remise, prnet]=$(this).val().split('§')
-            // get supplier price
-            idsinbon=JSON.parse(localStorage.getItem('pdctsinbonsortieachat')) || []
-            if (idsinbon.includes(productid)){
-                alertify.error('Deja ajouté')
-            }else{
-                $('.pdctselectedstock').text(stock)
-                $('.pdctselecedprachat').text(p)
-            $('.itemsbon').prepend(`<tr class="item-row">
-                    <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${ref} - ${car}</div></div></td>
-
-                    <td><input class="form-control qty calculate" placeholder="Quantity" type="number" onkeyup="saverow(event)"></td>
-                    <td><input class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <td><input class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <td><span class="total">0.00</span></td>
-                    <td><input class="form-control prventmag" placeholder="Pr. vente. mag" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <td><input class="form-control prventgro" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <input type="hidden" class="productid" value=${productid}><td><i class="btn btn-danger delete" title="Supprimer" onclick="removeline(event, '${productid}')">X</i></td>
-                    </tr>`);
-
-                calculate()
-            // add product row with client rice
-            }
-
-        })
         function updatetotal(){
             var totalSum = 0;
             $('.total').each(function() {
@@ -507,6 +476,7 @@
                     remiseamount=(price*remise)/100
                     afterremise=price-remiseamount
                     finalamount=(qty*afterremise).toFixed(2)
+                    console.log('>> finalamount in calculate function', finalamount)
                     total=$(el).parent().parent().find('.total')
                     total.text(finalamount)
                     updatetotal()
@@ -546,6 +516,32 @@
 
 
     $(document).ready(function () {
+        bonitems=JSON.parse(localStorage.getItem('bonitemsachat')) || []
+        for (i of bonitems){
+            $('.itemsbon').prepend(`<tr class="item-row">
+                    <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${i.article}</div></div></td>
+
+                    <td><input class="form-control qty calculate" placeholder="Quantity" type="number"
+                    value="${i.qty}"
+                    onkeyup="saverow(event)"></td>
+                    <td>
+                        <input
+                        value="${i.price}"
+                        class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)"> </td>
+                    <td><input
+                        value="${i.remise}"
+                        class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)"> </td>
+                    <td><span class="total">${i.total}</span></td>
+                    <td><input class="form-control prventmag" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)" value="${i.prventemag}"> </td>
+                    <td><input class="form-control prventgro" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)" value="${i.prventegro}"> </td>
+                    <input type="hidden" class="productid" value=${i.productid}><td><i class="btn btn-danger delete" title="Supprimer" onclick="removeline(event, '${i.productid}')">X</i></td>
+                    </tr>`);
+
+        calculate()
+        }
+
+        grandtotal=localStorage.getItem('grandtotal') || 0
+        $('#grandTotal').text(grandtotal)
         $('.tva').on('click', function(){
             $('.price').each((i, el)=>{
                 let price=$(el).val()
@@ -623,7 +619,7 @@
 
 
 
-            // $('#all-items').live('change', function(){
+            // $('#all-items').on('change', function(){
             //     if ($(this).val()==0){
             //         return
             //     }
@@ -644,12 +640,12 @@
             //         $(this).closest('tr').remove();
 			// updatetotal()
             //     });
-            //     // jQuery().invoice().init
+            //     // //
             //     calculate()
             // });
 
 
-            $('#addsuplly').live('click', function () {
+            $('#addsuplly').on('click', function () {
                 if (($.inArray(true, $('.price').map((t, i)=>$(i).val()=="")) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()=="")) !== -1) || ($.inArray(true, $('.price').map((t, i)=>$(i).val()==0)) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()==0)) !== -1)) {
 
                     showerror();
@@ -701,6 +697,7 @@
                                 'bondate': $('[name="bondate"]').val(),
                                 'total': parseFloat($('#grandTotal').text()),
                                 'nbon':$('#invoice_number').val(),
+                                'facture':'{{facture}}'
                             }, function (data) {
                                 if (data.success){
 

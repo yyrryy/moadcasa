@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import ast
 import json
@@ -123,7 +122,8 @@ def facture(request, pk):
 def bon(request, pk):
 
     inv=SalesHistory.objects.get(id=pk)
-    return render(request, 'sales/bon.html', {'inv':inv, 'title':f"Bon de sortie: #{inv.receipt_no}"})
+    items=PurchasedProduct.objects.filter(invoice=inv)
+    return render(request, 'sales/bon.html', {'inv':inv, 'title':f"Bon de sortie: #{inv.receipt_no}", 'items':items})
     # purchased=PurchasedProduct.objects.filter(invoice=inv)
     # buffer = BytesIO()
 
@@ -219,7 +219,8 @@ def bon(request, pk):
 
 def avoirclient(request):
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     year_month = timezone.now().strftime("%y")
     latest_receipt = Avoir.objects.filter(
         receipt_no__startswith=f'AV{year_month}'
@@ -239,7 +240,8 @@ def avoirclient(request):
 
 def generateavoir(request):
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     items=json.loads(request.POST.get('items'))
     customerid=request.POST.get('customer')
     client=Customer.objects.get(pk=customerid)
@@ -271,17 +273,18 @@ def generateavoir(request):
                 product=product,
                 quantity=float(i['qty']),
                 price=float(i['price']),
+                total=float(i['total']),
                 avoir_reciept=avoir,
                 status=0
             )
-            r=Returned.objects.create(
-                product=product,
-                qty=float(i['qty']),
-                price=float(i['price']),
-                avoir=avoir,
-                total=float(i['total'])
-            )
-            returned.append(r.id)
+            # r=Returned.objects.create(
+            #     product=product,
+            #     qty=float(i['qty']),
+            #     price=float(i['price']),
+            #     avoir=avoir,
+            #     total=float(i['total'])
+            # )
+            #returned.append(r.id)
             product.stock=float(product.stock)+float(i['qty'])
             product.save()
             originref=product.ref.split(' ')[0]
@@ -291,7 +294,7 @@ def generateavoir(request):
             simillar.update(command=False)
             simillar.update(supplier=None)
             simillar.update(commanded=False)
-        avoir.returneditems.set(returned)
+        #avoir.returneditems.set(returned)
         avoir.save()
     client.save()
     return JsonResponse({
@@ -308,10 +311,12 @@ class CreateInvoiceView(FormView):
             return HttpResponseRedirect(reverse('login'))
         userprofile=UserProfile.objects.get(user=self.request.user)
         if not request.user.retailer_user.retailer.working:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
         if not request.user.retailer_user.role_type=='owner':
             if not userprofile.cancreatebon:
-                return render(request, 'products/nopermission.html')
+                # return render(request, 'products/nopermission.html')
+                pass
         return super(
             CreateInvoiceView, self).dispatch(request, *args, **kwargs)
 
@@ -337,7 +342,7 @@ class CreateInvoiceView(FormView):
             'nbon':receipt_no,
             'products': products,
             'customers': customers,
-            'present_date': timezone.now().date(),
+            'present_date': timezone.now(),
             'title':'Ajouter Nouveau Bon',
             'children':Category.objects.filter(children__isnull=True).order_by('name'),
             'marks':Mark.objects.all()
@@ -415,15 +420,19 @@ class GenerateInvoiceAPIView(View):
     def post(self, request, *args, **kwargs):
         customer=Customer.objects.get(id=request.POST.get('customer_id'))
         datebon=self.request.POST.get('datebon')
+        timebon=self.request.POST.get('timebon')
+        datetime_str = f"{datebon} {timebon}"
+        datebon = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+        print('>> datebon', datebon)
         # make it datetime object
-        datebon=datetime.strptime(datebon, '%Y-%m-%d')
+        # datebon=datetime.strptime(datebon, '%Y-%m-%d')
         sub_total = self.request.POST.get('sub_total')
         discount = self.request.POST.get('discount')
         shipping = self.request.POST.get('shipping')
         grand_total = self.request.POST.get('grand_total')
         totalQty = self.request.POST.get('totalQty')
         remaining_payment = self.request.POST.get('remaining_amount')
-        paid_amount = self.request.POST.get('paid_amount')
+        paid_amount = self.request.POST.get('paid_amount') or 0
         cash_payment = self.request.POST.get('cash_payment')
         returned_cash = self.request.POST.get('returned_cash')
         items = json.loads(self.request.POST.get('items'))
@@ -470,14 +479,14 @@ class GenerateInvoiceAPIView(View):
                         retailer=self.request.user.retailer_user.retailer
                     )
                     # add client price:
-                    clientprice=Clientprice.objects.filter(client=customer, product=product).first()
-                    if clientprice:
-                        clientprice.price=float(item.get('price'))
-                        clientprice.qty=float(item.get('qty'))
-                        clientprice.save()
-                    else:
-                        # create it
-                        Clientprice.objects.create(client=customer, product=product, price=float(item.get('price')), qty=float(item.get('qty')))
+                    # clientprice=Clientprice.objects.filter(client=customer, product=product).first()
+                    # if clientprice:
+                    #     clientprice.price=float(item.get('price'))
+                    #     clientprice.qty=float(item.get('qty'))
+                    #     clientprice.save()
+                    # else:
+                    #     # create it
+                    #     Clientprice.objects.create(client=customer, product=product, price=float(item.get('price')), qty=float(item.get('qty')))
 
                     #prices=json.loads(product.prices)
                 #     for pr in prices:
@@ -542,11 +551,19 @@ class GenerateInvoiceAPIView(View):
                         extra_item = extra_item_form.save()
                         extra_items_id.append(extra_item.id)
 
-            self.invoice.purchased_items.set(purchased_items_id)
-            self.invoice.extra_items.set(extra_items_id)
+            # self.invoice.purchased_items.set(purchased_items_id)
+            # self.invoice.extra_items.set(extra_items_id)
             self.invoice.save()
             # add sold to client
-            customer.rest=float(customer.rest)+float(grand_total)
+            customer.rest=float(customer.rest)+float(grand_total)-float(paid_amount)
+            if float(paid_amount)>0:
+                PaymentClient.objects.create(
+                    client=customer,
+                    amount=float(paid_amount),
+                    mode='espece',
+                    bon=self.invoice,
+                    date=datebon
+                    )
             customer.save()
             # if self.customer or self.request.POST.get('customer_id'):
             #     ledger_form_kwargs = {
@@ -599,10 +616,12 @@ class InvoicesList(ListView):
             return HttpResponseRedirect(reverse('login'))
         userprofile=UserProfile.objects.get(user=self.request.user)
         if not request.user.retailer_user.retailer.working:
-                return render(request, 'products/nopermission.html')
+                # return render(request, 'products/nopermission.html')
+                pass
         if not request.user.retailer_user.role_type=='owner':
             if not userprofile.canseelistbons:
-                return render(request, 'products/nopermission.html')
+                # return render(request, 'products/nopermission.html')
+                pass
         return super(InvoicesList, self).dispatch(request, *args, **kwargs)
 
 
@@ -611,7 +630,7 @@ class InvoicesList(ListView):
         context = super(InvoicesList, self).get_context_data(**kwargs)
         context.update({
             'title':'Liste Bons',
-            'bons':SalesHistory.objects.all().order_by('-id'),
+            'bons':SalesHistory.objects.order_by('-id')[:50],
         })
         return context
 
@@ -633,7 +652,9 @@ class UpdateInvoiceView(FormView):
         context.update({
             'title':'Modifier Bon sortie'+str(invoice.receipt_no),
             'invoice': invoice,
-            'categories':Category.objects.filter(children__isnull=True).order_by('name')
+            'categories':Category.objects.filter(children__isnull=True).order_by('name'),
+            'items':PurchasedProduct.objects.filter(invoice=invoice),
+            'customers':Customer.objects.all(),
         })
         return context
 
@@ -653,16 +674,18 @@ class UpdateInvoiceAPIView(View):
 
     def post(self, request, *args, **kwargs):
         invoiceid=request.POST.get('invoice_id')
+        customerid=request.POST.get('customerid')
+        print('>>> cust', customerid)
         invoice = SalesHistory.objects.get(id=invoiceid)
         purcheses=PurchasedProduct.objects.filter(invoice=invoice)
         #products=[i.product for i in purcheses]
         items=json.loads(request.POST.get('items'))
         oldtotal=invoice.grand_total
         # delete the old total in customer's rest
-        if invoice.customer:
-            customer=Customer.objects.get(id=invoice.customer.id)
-            customer.rest=float(customer.rest)-float(oldtotal)+float(request.POST.get('grand_total'))
-            customer.save()
+        # if invoice.customer:
+        #     customer=Customer.objects.get(id=invoice.customer.id)
+        #     customer.rest=float(customer.rest)-float(oldtotal)+float(request.POST.get('grand_total'))
+        #     customer.save()
 
         # add new total
 
@@ -682,13 +705,13 @@ class UpdateInvoiceAPIView(View):
             print('loop items')
             for i in items:
                 product=Product.objects.get(pk=i.get('item_id'))
-                clientprice=Clientprice.objects.filter(client=customer, product=product).first()
-                if clientprice:
-                    clientprice.price=float(i.get('price'))
-                    clientprice.qty=float(i.get('qty'))
-                    clientprice.save()
-                else:
-                    Clientprice.objects.create(client=customer, product=product, price=float(i.get('price')), qty=float(i.get('qty')))
+                # clientprice=Clientprice.objects.filter(client_id=customerid, product=product).first()
+                # if clientprice:
+                #     clientprice.price=float(i.get('price'))
+                #     clientprice.qty=float(i.get('qty'))
+                #     clientprice.save()
+                # else:
+                #     Clientprice.objects.create(client=customer, product=product, price=float(i.get('price')), qty=float(i.get('qty')))
                 # try:
                 #     item=purcheses.filter(product_id=i.get('item_id')).first()
                 #     print(item, item.quantity, item.price, item.purchase_amount, invoiceid, i.get('item_id'), i.get('qty'), i.get('price'), i.get('total'))
@@ -705,7 +728,7 @@ class UpdateInvoiceAPIView(View):
                     price=i.get('price'),
                     purchase_amount=i.get('total'),
                 )
-                invoice.purchased_items.add(newpurchase)
+                #invoice.purchased_items.add(newpurchase)
                 product.stock=float(product.stock)-float(i.get('qty'))
                 product.save()
 
@@ -713,6 +736,7 @@ class UpdateInvoiceAPIView(View):
 
 
         invoice.grand_total=request.POST.get('grand_total')
+        invoice.customer_id=customerid
         invoice.save()
         # # customer_name = self.request.POST.get('customer_name')
         # # customer_phone = self.request.POST.get('customer_phone')

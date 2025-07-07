@@ -10,9 +10,9 @@
 
 </head>
 <body>
-    <div class="text-end">
-        <a class="btn btn-sm btn-info" href="#" data-abc="true" onclick="PrintInvoice('invoice')">
-          <i class="fa fa-print mr-1"></i> Print </a>
+    <div class="d-flex justify-content-between">
+      <a href="/">Retour</a>
+        <a class="btn btn-sm btn-info" href="#" data-abc="true" onclick="PrintInvoice('{{inv.id}}')">Print </a>
         
       </div>
     <div class="mt-100 mb-100">
@@ -74,7 +74,7 @@
                         </tr>
                         {% endfor %}
                       {% else %}
-                        {% for i in inv.purchased_items.all %}
+                        {% for i in items %}
                       <tr>
                         <td class="left">{{i.product.car}}</td>
                         <td >
@@ -93,7 +93,7 @@
                       <tr>
                         <td colspan="2"></td>
                         <td >Total</td>
-                        <td>{{ inv.grand_total|floatformat:2 }} Dh</td>
+                        <td>{{ inv.grand_total|floatformat:2 }} Dh {{payments}}</td>
                     </tr>
                     
                 </tr>
@@ -112,18 +112,29 @@
 <script src="{% static 'js/jquery.min.1.7.js'%}"></script>
 
 <script>
-    function PrintInvoice(divName){
-         var printContents = document.getElementById(divName).innerHTML;
-         var originalContents = document.body.innerHTML;
-         document.body.innerHTML = printContents;
-         $('body').css('font-size', '12px')
-         $('.head').addClass('')
-         $("table > thead > tr > th").css('padding', '0px');
-         $("table > tbody > tr > td").css('padding', '5px');
-         $('body').addClass('d-flex flex-column vh-100 p-3')
-         $('.foooterfacture').addClass('mt-auto');
-         window.print();
-         document.body.innerHTML = originalContents;
-    }
-</script>
+  function PrintInvoice(bonid){
+
+url = window.location.pathname.split( '/' );[0]
+var myWindow = window.open('http://'+window.location.href.split( '/' )[2]+'/product/bonprint/'+bonid, '', 'width=900,height=900');
+
+ myWindow.focus();
+
+ myWindow.addEventListener('load', function() {
+console.log('New window loaded.');
+
+// Wait for 5 seconds before printing
+setTimeout(function() {
+ try {
+   myWindow.print();
+   console.log('Print command issued.');
+   myWindow.close();
+   console.log('New window closed.');
+ } catch (e) {
+   console.error('Failed to print and close the window:', e);
+ }
+}, 300); // 1000 milliseconds = 1 seconds
+}, false);
+}
+
+    </script>
 </html>

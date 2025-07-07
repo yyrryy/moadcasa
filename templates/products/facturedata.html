@@ -1,22 +1,23 @@
 ﻿
 <div class="btn-group mb-3" role="group" aria-label="Default button group">
-   <!-- this used to be how to do avoir direcly from the bon -->
-    <!-- <a type="button" class="btn btn-primary" href="/sales/avoirclient/{{bon.id}}">
+   <!-- this used to be how to do avoir direcly from the facture -->
+    <!-- <a type="button" class="btn btn-primary" href="/sales/avoirclient/{{facture.id}}">
         Avoir
     </a> -->
     {% if avoir %}
-    <a onclick="avoirprint('{{bon.id}}')" type="button" class="btn btn-primary">
-        Bon
+    <a onclick="avoirprint('{{facture.id}}')" type="button" class="btn btn-primary">
+        facture
     </a>
     {% else %}
-
-    <a href="{% if bon.customer %}/sales/update/{{bon.id}}/api/{% else %}/product/modifierboncomptoir/{{bon.id}}{% endif%}" type="button" class="btn btn-primary me-5">
+    {% if not facture.paid_amount > 0 %}
+    <a href="/product/modifierfacture?id={{facture.id}}" type="button" class="btn btn-primary me-5">
         Modifier
     </a>
-    <button type="button" class="btn btn-primary" onclick="printbon('{{bon.id}}')">
-        Bon
+    {%endif%}
+    <button type="button" class="btn btn-primary fa fa-download" onclick="printfacture('{{facture.id}}')">
+        facture
     </button>
-    <!-- <button onclick="printfacture({{bon.id}})" type="button" class="btn btn-primary">
+    <!-- <button onclick="printfacture({{facture.id}})" type="button" class="btn btn-primary">
         Factuer
     </button> -->
     {% endif %}
@@ -27,14 +28,14 @@
             <div>
 
 
-                <strong class="f-size">Client: {% if bon.customer %}{{ bon.customer.customer_name }}{% else %}Comptoir {% endif%} </strong>
+                <strong class="f-size">Client: {{ facture.client.customer_name }} </strong>
             </div>
             <div>
                 <strong>
-                        {{bon.receipt_no}}
+                        {{facture.facture_no}}
                 </strong>
             </div>
-            <h6 style="font-size:14px">{{ bon.datebon|date:"d/m/Y"}}</h6>
+            <h6 style="font-size:14px">{{ facture.datefacture|date:"d/m/Y"}}</h6>
 
         </div>
         <div class="col-xs-12 col-md-12">
@@ -43,8 +44,8 @@
                     <div class="col-md-12 ">
 
                 </div>
-                    <!-- {% if bon.customer.shop %}
-                        <label><strong class="f-size">Shop Name:</strong></label> <span class="f-size">{{ bon.customer.shop }}</span><br>
+                    <!-- {% if facture.customer.shop %}
+                        <label><strong class="f-size">Shop Name:</strong></label> <span class="f-size">{{ facture.customer.shop }}</span><br>
                     {% endif %} -->
                     <div class="col-md-12 pull-left">
 
@@ -95,21 +96,43 @@
                                 {{ item.price|floatformat:2}}
                             </td>
                             <td >
-                                {{ item.quantity|floatformat:-2}}
+                                {{ item.qty|floatformat:-2}}
                             </td>
                             <td >
-                                {{ item.purchase_amount|floatformat:2 }}
+                                {{ item.total|floatformat:2 }}
                             </td>
                         </tr>
                         {% endfor %}
                         {% endif %}
                         <tr >
                             <td colspan="3" class="text-end">
-                                Total
+                                Total TTC
                             </td>
                             <td>
                                 <b id="grandTotal" style="color: red;">
-                                    {{ bon.grand_total|floatformat:2 }} Dh
+                                    {{ facture.total|floatformat:2 }} Dh
+                                </b>
+                            </td>
+
+                        </tr>
+                        <tr >
+                            <td colspan="3" class="text-end">
+                                TVA 20%
+                            </td>
+                            <td>
+                                <b id="grandTotal" style="color: red;">
+                                    {{ facture.thistva|floatformat:2 }} Dh
+                                </b>
+                            </td>
+
+                        </tr>
+                        <tr >
+                            <td colspan="3" class="text-end">
+                                Total HT
+                            </td>
+                            <td>
+                                <b id="grandTotal" style="color: red;">
+                                    {{ facture.ht|floatformat:2 }} Dh
                                 </b>
                             </td>
 
@@ -123,13 +146,13 @@
         </div>
     </div>
 {% if not avoir %}
-{% if bon.paid_amount > 0 %}
+{% if facture.paid_amount > 0 %}
     <h1 class="bg-dark p-2 rounded text-white">
-        Mantant Payé: {{bon.paid_amount}}
+        Mantant Payé: {{facture.paid_amount}}
     </h1>
 {% endif %}
 </div>
-{% if not bon.paid_amount >= bon.grand_total %}
+{% if not facture.paid_amount >= facture.total %}
 <div class="mt-5 rounded bg-white row">
     <strong> ajouter payment</strong><br>
     <div class="col-3">
@@ -153,7 +176,7 @@
         Echeance <br>
         <input type="date" class="form-control echeance  me-2" placeholder="mantant">
     </div>
-    <button onclick="addpaymentbon(event, '{{bon.id}}')" class="btn btn-primary w-
+    <button onclick="addpaymentfacture(event, '{{facture.id}}')" class="btn btn-primary w-
     100 mt-3">Ajouter</button>
 </div>
 {% endif %}
@@ -164,7 +187,7 @@
         list avoirs
     </h5>
     {% for i in avoirs %}
-    N°: {{i.receipt_no}} <br>
+    N°: {{i.facture_no}} <br>
     <table class="table table-bordered">
         <thead>
         <tr class="">

@@ -67,11 +67,16 @@
                     <th>{{total_avoirs|floatformat:2}} DH</th>
                 </tr>
                 <tr>
-                    <th>Rest</th>
-                    <th>{{ customer.rest|floatformat:2 }} DH</th>
+                    <th>Rest bl</th>
+                    <th>{{sold}} DH</th>
+                </tr>
+                <tr>
+                    <th>Rest FC</th>
+                    <th>{{soldfc}} DH</th>
                 </tr>
                 
             </table>
+            
             <div class="mt-3" id="reportrange" style="cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
                 <i class="fa fa-calendar"></i>&nbsp;
                 <span class="filterdate"></span> <i class="fa fa-caret-down"></i>
@@ -88,44 +93,64 @@
                 <form action="{% url 'product:addpaymentsclient' %}" method="post" autocomplete="off">
                     <div class="form-group">
                             {% csrf_token %}
-                            <input type="hidden" name="client" value="{{customer.id}}">
-                            <label>
-                                <strong>Date de reglement (*)</strong>
-                            </label>
-                            <input type="date" class="form-control" name="date" required>
-                            <br>
-                            <label>
-                                <strong>Mantant (*)</strong>
-                            </label>
-                            <input type="number" class="form-control" name="mantant" min="0" required>
-                            <br>
-                            <label>
-                                <strong>Mode (*)</strong>
-                            </label>
-                            <select name="mode" class="form-select" required onchange="modeReglementChange(event)">
-                                <option></option>
-                                <option value="espece">ESPECE</option>
-                                <option value="effet">EFFET</option>
-                                <option value="cheque">CHEQUE</option>
-                                <option value="verment">VEREMENT</option>
-                                <option value="remise">REMISE</option>
+                            <div class="form-group">
 
-                            </select>
+                                <input type="hidden" name="client" value="{{customer.id}}">
+                                <label>
+                                    <strong>Date de reglement (*)</strong>
+                                </label>
+                                <input type="date" class="form-control" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="">Heur</label>
+                                <input type="time" class="form-control" name="time" required>
+                            </div>
                             <br>
-                            <label>
-                                <strong>N° piece</strong>
-                            </label>
-                            <input type="text" class="form-control" name="npiece">
+                            <div class="form-group">
+                                <label>
+                                    <strong>Mantant (*)</strong>
+                                </label>
+                                <input type="number" class="form-control" name="mantant" min="0" required>
+                            </div>
                             <br>
-                            <label>
-                                <strong>Echeance</strong>
-                            </label>
-                            <input type="date" class="form-control" name="echeance">
+                            <div class="form-group">
+                                <label>
+                                    <strong>Mode (*)</strong>
+                                </label>
+                                <select name="mode" class="form-select" required onchange="modeReglementChange(event)">
+                                    <option></option>
+                                    <option value="espece">ESPECE</option>
+                                    <option value="effet">EFFET</option>
+                                    <option value="cheque">CHEQUE</option>
+                                    <option value="verment">VEREMENT</option>
+                                    <option value="remise">REMISE</option>
+                                    
+                                </select>
+                            </div>
                             <br>
-                            <label>
-                                <strong>Remarque</strong>
-                            </label>
-                            <input type="text" class="form-control" name="note">
+                            <div class="form-group">
+
+                                <label>
+                                    <strong>N° piece</strong>
+                                </label>
+                                <input type="text" class="form-control" name="npiece">
+                            </div>
+                                <br>
+                                <div class="form-group">
+                                    
+                                    <label>
+                                        <strong>Echeance</strong>
+                                    </label>
+                                    <input type="date" class="form-control" name="echeance">
+                                </div>
+                                    <br>
+                            <div class="form-group">
+
+                                <label>
+                                    <strong>Remarque</strong>
+                                </label>
+                                <input type="text" class="form-control" name="note">
+                            </div>
                             <button class="w-100 btn btn-primary">Ajouter</button>
                     </div>
                 </form>
@@ -135,7 +160,10 @@
 
             {% for i in clientpayments %}
             <tr>
-                <td>{{i.created_at|date:"d/m/Y"}}</td>
+                <td>
+                    {% if i.isfacture %}(FC){% endif %}
+                </td>
+                <td> {{i.created_at|date:"d/m/Y"}}</td>
                 <td>{{i.echeance|date:"d/m/Y"}}</td>
                 <td>{{i.mode}}</td>
                 <td>{{i.amount|floatformat:2}} DH</td>
@@ -212,7 +240,7 @@
                     <tbody class="item-table-body text-center products">
                     {% for i in clientproducts %}
                     <tr onclick="bondata({{i.id}})">
-                        <td>{{i.datebon|date:"d/m/Y"}}</td>
+                        <td>{{i.datebon|date:"d/m/Y H:i"}}</td>
                         <!-- <td>
                             {% for i in i.purchased_items.all %}
                             {{i.product.ref}} <br>

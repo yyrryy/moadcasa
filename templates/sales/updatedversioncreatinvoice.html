@@ -253,7 +253,7 @@
             });
 
 
-            $('.invoice-item').live('focusout', function(){
+            $('.invoice-item').on('focusout', function(){
                 console.log('focusout')
                 var item_price = $(this).parent().parent().find("option[value='" + $(this).val() + "']").data('price');
                 $(this).parent().parent().parent().find('.price').val(item_price);
@@ -263,7 +263,7 @@
                 var prch = $(this).parent().parent().find("option[value='" + $(this).val() + "']").data('prachat')
                 $(this).parent().parent().parent().find('.prch').html(prch);
             });
-            $('#create-invoice').live('click', function () {
+            $('#create-invoice').on('click', function () {
                 if ($('#item-name').hasClass('item-name') == false || $('#customer-id').val()=='') {
                     $('.item-error').show();
                     return;

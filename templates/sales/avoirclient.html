@@ -50,7 +50,8 @@
         <!-- <div class="mb-2 col-5">
 
             <div>
-                <select class="form-selsect select2 customer " name="customer" id="customer">
+                <select class="form-selsect select2 customer 
+ clientselectbl " name="customer" id="customer">
                     <option value="0">
                         Client
                     </option>
@@ -269,7 +270,7 @@
 
                         </td>
                         <td>
-                            <input readonly value="${data.price}" class="form-control price" >
+                            <input value="${data.price}" class="form-control price" >
                         </td>
                         <td>
                             <input class="form-control qty" placeholder="Quantity" type="number" max="{{ item.quantity|floatformat:-2}}" onkeyup="checkmax(this)">
@@ -349,7 +350,7 @@
 
 
 
-            $('#create-invoice').live('click', function () {
+            $('#create-invoice').on('click', function () {
 								if ($('.clientselect').val()=="" || $('.dateavoir').val()==""){
 									alertify.error('Client/date')
 									return

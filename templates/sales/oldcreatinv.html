@@ -94,7 +94,8 @@
                             <div><strong>الزبناء المسجلون</strong> </div>
 							<div class="existing-customer">
                                 
-                                <select class="form-selsect select2 customer w-100" name="customer" id="customer">
+                                <select class="form-selsect select2 customer 
+ clientselectbl w-100" name="customer" id="customer">
                                     <option value="0">----</option>
                                     {% for customer in customers %}
                                         <option value="{{ customer.id }}">{{ customer.customer_name }} - {{ customer.customer_phone }}</option>
@@ -192,27 +193,27 @@
     $('.loading').removeClass('d-none').addClass('d-flex');
     $(document).ready(function () {
         // add client
-        $('.addclientbtn').on('click', ()=>{
-            if($('.customer').val() == ''|| $('.customer_phone').val()==''){
-                console.log('error')
-                $('.customererror').show();
-                return false;
-            }else{
-                $.post(
-                    '{% url "product:addclient" %}',
-                    {
-                        'name':$('.customer').val(),
-                        'phone':$('.customer_phone').val(),
-                        'ice':$('.customer_ice').val(),
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    function(data){
-                        console.log(data)
-                        location.reload();
-                    }
-                )
-            }
-        })
+        // $('.addclientbtn').on('click', ()=>{
+        //     if($('.customer').val() == ''|| $('.customer_phone').val()==''){
+        //         console.log('error')
+        //         $('.customererror').show();
+        //         return false;
+        //     }else{
+        //         $.post(
+        //             '{% url "product:addclient" %}',
+        //             {
+        //                 'name':$('.customer').val(),
+        //                 'phone':$('.customer_phone').val(),
+        //                 'ice':$('.customer_ice').val(),
+        //                 'csrfmiddlewaretoken': '{{ csrf_token }}'
+        //             },
+        //             function(data){
+        //                 console.log(data)
+        //                 location.reload();
+        //             }
+        //         )
+        //     }
+        // })
 
         var item_list = '<datalist id="all-items">';
         // create datalist from pdct, its a registered
@@ -301,7 +302,7 @@
             });
 
 
-            $('.invoice-item').live('change', function(){
+            $('.invoice-item').on('change', function(){
                 console.log('item selected')
                 var item_price = $(this).parent().parent().find("option[value='" + $(this).val() + "']").data('price');
                 $(this).parent().parent().parent().find('.price').val(item_price);
@@ -315,7 +316,7 @@
             });
             
             
-            $('#create-invoice').live('click', function () {
+            $('#create-invoice').on('click', function () {
                 if ($('#item-name').hasClass('item-name') == false || $('select[name="customer"]').val()==0) {
                     $('.item-error').show();
                     return;

@@ -17,7 +17,7 @@
                             <input type="text" class="form-control" name="pname" required>
                             <br>
                             <label>
-                                <strong>Phone (*)</strong>
+                                <strong>Phone</strong>
                             </label>
                             <input type="text" class="form-control" name="pphone1" required>
                             <br>
@@ -69,7 +69,7 @@
                             <input type="text" class="form-control customer" name="customer_name" >
                             <br>
                             <label>
-                                <strong>Phone(*)</strong>
+                                <strong>Phone</strong>
                             </label>
                             <input type="number" class="form-control customer_phone" name="customer_phone" >
                             <strong>Address</strong>
@@ -81,12 +81,12 @@
                             </label>
                             <input type="text" class="form-control customer_ice" name="ice" >
                             <br>
-				<label>
+				            <!-- <label>
                                 <strong>Sold Initial *</strong>
                             </label>
                             <input type="number" class="form-control customer_sold" name="sold" >
-                            <br>
-                            <button type="button" class="btn btn-primary w-100 addclientbtn disabled">
+                            <br> -->
+                            <button type="button" class="btn btn-primary w-100 addclientbtn ">
                                 Valider
                             </button>
                         </div>
@@ -98,17 +98,17 @@
 </div>
 
 <div class="d-flex bg-white p-2 rounded justify-content-between">
-    <div>
+    <!-- <div>
         <button type="button" class="btn btn-success addoneproduct" data-bs-toggle="modal" data-bs-target="#exampleModal">
             Ajouter+
         </button>
-    </div>
+    </div> -->
 
-    <div>
+    <!-- <div>
         <strong style="font-size: 25px;">Total:
             {{ total_sold|floatformat:2 }} Dh
         </strong>
-    </div>
+    </div> -->
 
     <div>
         <div class="input-group custom-search-form col-md-4" style="left: 5px">
@@ -136,7 +136,7 @@
                 <th class="text-center"><i class="fa fa-bullhorn"></i>Nom</th>
                 <th class="text-center"><i class=" fa fa-bookmark"></i> Phone</th>
                 
-                <th class="text-center"><i class=" fa fa-bookmark"></i> Sold</th>
+                <!-- <th class="text-center"><i class=" fa fa-bookmark"></i> Sold</th> -->
                 <th class="text-center"></th>
             </tr>
             </thead>
@@ -146,7 +146,7 @@
 		<td><button class="btn fa fa-edit editsuppbtn" id="{{customer.id}}" data-bs-toggle="modal" data-bs-target="#editsuppmodal"></button></td>
                 <td><a href="{% url 'ledger:customer_ledger_detail' customer_id=customer.id %}">{{ customer.customer_name}}</a></td>
                 <td>{{ customer.customer_phone }}</td>
-                <td>{{ customer.rest|floatformat:2 }} DH</td>
+                <!-- <td>{{ customer.rest|floatformat:2 }} DH</td> -->
                 <td>
                 <!--     <a href="{% url 'ledger:customer_ledger_detail' customer_id=customer.id %}"><button class="btn btn-success btn-xs" title="Customer Ledger Detail"><i class="fa fa-eye"></i></button></a> -->
             </tr>
@@ -171,7 +171,7 @@
                 $('[name="pid"]').val(id)
             })
 })
-    $('.customer_phone').on('input', function(){
+    /*$('.customer_phone').on('input', function(){
         if ($(this).val().length == 10){
             $.post("{% url 'product:checkclient' %}", 
                 {
@@ -192,32 +192,33 @@
             return
         }
         $('.addclientbtn').addClass('disabled')
-    })
-    $('.addclientbtn').on('click', ()=>{
-            if($('.customer').val() == '' || $('.customer_phone').val()==''  || $('.customer_sold').val()=='' || $('.customer_phone').val().length!=10){
-                console.log('error')
-                $('.customererror').show();
-                return false;
-            }else{
+    })*/
+    // $('.addclientbtn').on('click', ()=>{
+    //         if($('.customer').val() == ''){
+    //             console.log('error')
+    //             $('.customererror').show();
+    //             return false;
+    //         }else{
 
-                $('.addclientbtn').addClass('disabled')
-                $.post(
-                    '{% url "product:addclient" %}',
-                    {
-                        'name':$('.customer').val(),
-                        'phone':$('.customer_phone').val(),
-                        'ice':$('.customer_ice').val(),
-			'sold':$('.customer_sold').val(),
-                        'address':$('.customer_address').val(),
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    function(data){
-                        location.reload();
-                    }
-                )
-            }
-        })
-       $(document).ready(function(){
+    //             $('.addclientbtn').addClass('disabled')
+    //             $.post(
+    //                 '{% url "product:addclient" %}',
+    //                 {
+    //                     'name':$('.customer').val(),
+    //                     'phone':$('.customer_phone').val(),
+    //                     'ice':$('.customer_ice').val(),
+	// 		'sold':$('.customer_sold').val(),
+    //                     'address':$('.customer_address').val(),
+    //                     'csrfmiddlewaretoken': '{{ csrf_token }}'
+    //                 },
+    //                 function(data){
+    //                     location.reload();
+    //                 }
+    //             )
+    //         }
+    //     })
+       
+        $(document).ready(function(){
           $('.extra-items').on("keyup", function() {
               var value = $(this).val().toLowerCase();
               $(".ledger-table-body tr").filter(function() {

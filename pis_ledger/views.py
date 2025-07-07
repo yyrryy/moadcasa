@@ -12,7 +12,7 @@ from pis_com.forms import CustomerForm
 from pis_ledger.forms import LedgerForm
 from  pis_ledger.forms import Ledger
 from pis_sales.models import SalesHistory, Avoir
-from pis_product.models import PaymentClient
+from pis_product.models import PaymentClient, Facture
 # import render
 from django.shortcuts import render
 
@@ -108,8 +108,8 @@ class CustomerLedgerView(TemplateView):
     def dispatch(self, request, *args, **kwargs):
         if not self.request.user.is_authenticated:
             return HttpResponseRedirect(reverse('login'))
-        if not request.user.retailer_user.retailer.working:
-            return render(request, 'products/nopermission.html')
+        # if not request.user.retailer_user.retailer.working:
+        #     return render(request, 'products/nopermission.html')
         return super(
             CustomerLedgerView, self).dispatch(request, *args, **kwargs)
 
@@ -221,12 +221,25 @@ class CustomerLedgerDetailsView(TemplateView):
         #     payment_total = 0
         total_transactions = SalesHistory.objects.filter(customer=customer).aggregate(Sum('grand_total'))
         total_transactions = float(total_transactions.get('grand_total__sum') or 0)
-        total_payments = PaymentClient.objects.filter(client=customer).aggregate(Sum('amount'))
+        total_payments = PaymentClient.objects.filter(client=customer, isfacture=False).aggregate(Sum('amount'))
         total_payments = float(total_payments.get('amount__sum') or 0)
         total_avoirs = Avoir.objects.filter(customer=customer).aggregate(Sum('grand_total')).get('grand_total__sum') or 0
-        clientpayments=PaymentClient.objects.filter(client=customer)
-
+        clientpayments=PaymentClient.objects.filter(client=customer, isfacture=False)
+        bons = SalesHistory.objects.filter(customer=customer)
+        paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
+        avoirs = Avoir.objects.filter(customer=customer)
+        payments=PaymentClient.objects.filter(client=customer, isfacture=False)
+        totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+        totalcredit=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
+        sold=float(totalbons)-float(totalcredit)
+        factures=Facture.totalclient(customer=customer)
+        avoirsfc=Avoir.totalclientfc(customer=customer)
+        #avances+=SalesHistory.totalclientavance(customer=customer)
+        reglementsfc=PaymentClient.totalclientfc(customer=customer)
+        soldfc=round(float(factures)-float(avoirsfc)-float(reglementsfc), 2)   
         context.update({
+            'sold':sold,
+            'soldfc':soldfc,
             'customer': customer,
             'ledgers': ledgers.order_by('-dated'),
             'ledger_total': '%g' % ledger_total,

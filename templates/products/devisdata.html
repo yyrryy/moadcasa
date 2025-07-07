@@ -1,25 +1,24 @@
 ﻿
 <div class="btn-group mb-3" role="group" aria-label="Default button group">
    <!-- this used to be how to do avoir direcly from the bon -->
-    <!-- <a type="button" class="btn btn-primary" href="/sales/avoirclient/{{bon.id}}">
+    <!-- <a type="button" class="btn btn-primary" href="/sales/avoirclient/{{devis.id}}">
         Avoir
     </a> -->
-    {% if avoir %}
-    <a onclick="avoirprint('{{bon.id}}')" type="button" class="btn btn-primary">
-        Bon
-    </a>
-    {% else %}
+    
 
-    <a href="{% if bon.customer %}/sales/update/{{bon.id}}/api/{% else %}/product/modifierboncomptoir/{{bon.id}}{% endif%}" type="button" class="btn btn-primary me-5">
+    <!-- <a href="/product/updatedevis?id={{devis.id}}" type="button" class="btn btn-primary me-5">
         Modifier
+    </a> -->
+    
+    {% if not devis.isgenerated %}
+    <a type="button" class="btn btn-primary" href="/product/genererdevistobonpage?id={{devis.id}}">
+        Generer Bon
     </a>
-    <button type="button" class="btn btn-primary" onclick="printbon('{{bon.id}}')">
-        Bon
-    </button>
-    <!-- <button onclick="printfacture({{bon.id}})" type="button" class="btn btn-primary">
+    {% endif %}
+
+    <!-- <button onclick="printfacture({{devis.id}})" type="button" class="btn btn-primary">
         Factuer
     </button> -->
-    {% endif %}
   </div>
 <div class="bg-white rounded shadow" id="print-invoice" style="padding: 10px">
     <div class="row">
@@ -27,14 +26,14 @@
             <div>
 
 
-                <strong class="f-size">Client: {% if bon.customer %}{{ bon.customer.customer_name }}{% else %}Comptoir {% endif%} </strong>
+                <strong class="f-size">Client: {% if devis.client %}{{ devis.client.client_name }}{% else %}Comptoir {% endif%} </strong>
             </div>
             <div>
                 <strong>
-                        {{bon.receipt_no}}
+                        {{devis.devis_no}}
                 </strong>
             </div>
-            <h6 style="font-size:14px">{{ bon.datebon|date:"d/m/Y"}}</h6>
+            <h6 style="font-size:14px">{{ devis.date|date:"d/m/Y"}}</h6>
 
         </div>
         <div class="col-xs-12 col-md-12">
@@ -43,8 +42,8 @@
                     <div class="col-md-12 ">
 
                 </div>
-                    <!-- {% if bon.customer.shop %}
-                        <label><strong class="f-size">Shop Name:</strong></label> <span class="f-size">{{ bon.customer.shop }}</span><br>
+                    <!-- {% if devis.client.shop %}
+                        <label><strong class="f-size">Shop Name:</strong></label> <span class="f-size">{{ devis.client.shop }}</span><br>
                     {% endif %} -->
                     <div class="col-md-12 pull-left">
 
@@ -68,11 +67,11 @@
                     </tr>
                     </thead>
                     <tbody>
-                        {% if avoir %}
+                        
                         {% for item in items %}
                         <tr>
                             <td>
-                                {{ item.product.ref}} {{ item.product.category}} {{ item.product.mark}}
+                                {{ item.product.ref}} {{ item.product.category}} {{ item.product.car}} {{ item.product.mark}}
                             </td>
                             <td>
                                 {{ item.price|floatformat:2}}
@@ -85,31 +84,13 @@
                             </td>
                         </tr>
                         {% endfor %}
-                        {% else %}
-                        {% for item in items %}
-                        <tr>
-                            <td>
-                                {{ item.product.ref}} {{ item.product.category}} {{ item.product.car}} {{ item.product.mark}}
-                            </td>
-                            <td>
-                                {{ item.price|floatformat:2}}
-                            </td>
-                            <td >
-                                {{ item.quantity|floatformat:-2}}
-                            </td>
-                            <td >
-                                {{ item.purchase_amount|floatformat:2 }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        {% endif %}
                         <tr >
                             <td colspan="3" class="text-end">
                                 Total
                             </td>
                             <td>
                                 <b id="grandTotal" style="color: red;">
-                                    {{ bon.grand_total|floatformat:2 }} Dh
+                                    {{ devis.total|floatformat:2 }} Dh
                                 </b>
                             </td>
 
@@ -122,49 +103,14 @@
             </div>
         </div>
     </div>
-{% if not avoir %}
-{% if bon.paid_amount > 0 %}
-    <h1 class="bg-dark p-2 rounded text-white">
-        Mantant Payé: {{bon.paid_amount}}
-    </h1>
-{% endif %}
-</div>
-{% if not bon.paid_amount >= bon.grand_total %}
-<div class="mt-5 rounded bg-white row">
-    <strong> ajouter payment</strong><br>
-    <div class="col-3">
-        Mantant <br>
-        <input type="number" class="form-control paidamount  me-2" placeholder="mantant">
-    </div>
-    <div class="col-3">
-        Mode <br>
-        <select class="form-control mode  me-2">
-            <option value="espece">espece</option>
-            <option value="cheque">Cheque</option>
-            <option value="effet">Effet</option>
-            <option value="virement">Virement</option>
-        </select>
-    </div>
-    <div class="col-3">
-        N° piece <br>
-        <input type="text" class="form-control npiece  me-2" placeholder="N° piece">
-    </div>
-    <div class="col-3">
-        Echeance <br>
-        <input type="date" class="form-control echeance  me-2" placeholder="mantant">
-    </div>
-    <button onclick="addpaymentbon(event, '{{bon.id}}')" class="btn btn-primary w-
-    100 mt-3">Ajouter</button>
-</div>
-{% endif %}
-{% endif %}
+
 <!-- {% if not avoir %}
 <div class="bg-white shadow rounded mt-5">
     <h5>
         list avoirs
     </h5>
     {% for i in avoirs %}
-    N°: {{i.receipt_no}} <br>
+    N°: {{i.devis_no}} <br>
     <table class="table table-bordered">
         <thead>
         <tr class="">
@@ -206,3 +152,6 @@
     {% endfor %}
 </div>
 {% endif %} -->
+<script>
+    
+</script>

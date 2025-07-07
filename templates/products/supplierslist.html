@@ -18,9 +18,9 @@
                             <input type="text" class="form-control customer" name="pname" required>
                             <br>
                             <label>
-                                <strong>Phone1 (*)</strong>
+                                <strong>Phone1</strong>
                             </label>
-                            <input type="text" class="form-control customer" name="pphone1" required>
+                            <input type="text" class="form-control customer" name="pphone1">
                             <br>
                             <label>
                                 <strong>phone2</strong>
@@ -83,10 +83,21 @@
                 <th class="text-center"><i class=" fa fa-bookmark"></i> 
                 Fournisseur
                 </th>
+                {% if facture %}
+                <th>
+                    HT
+                </th>
+                <th>
+                    TVA
+                </th>
+                <th>
+                    Total TTC
+                </th>
+                {% else %}
                 <th class="text-center">
                     Mantant
                 </th> 
-                
+                {% endif %}
                 
                 
             </tr>
@@ -99,7 +110,14 @@
                     {{ i.nbon }}
                 </td>
                 <td>{{ i.supplier.name }}</td>
+                {% if facture %}
+                
+                <td>{{ i.ht }}</td>
+                <td>{{ i.tva }}</td>
                 <td>{{ i.total }}</td>
+                {% else %} 
+                <td>{{ i.total }}</td>
+                {% endif %}
             </tr>
             {% endfor %}
             
@@ -124,15 +142,15 @@
             </label>
             <input type="text" class="form-control customer" name="name" required>
             <br>
-            <label>
+            <!-- <label>
                 <strong>Sold (*)</strong>
             </label>
             <input type="text" class="form-control sold" name="sold" required>
-            <br>
+            <br> -->
             <label>
-                <strong>Phone1 (*)</strong>
+                <strong>Phone1</strong>
             </label>
-            <input type="text" class="form-control customer" name="phone1" required>
+            <input type="text" class="form-control customer" name="phone1">
             <br>
             <label>
                 <strong>phone2</strong>
@@ -160,9 +178,9 @@
 
     <div class="shadow rounded p-2 bg-white">
         <div class="d-flex justify-content-between">
-            <div>
+            <!-- <div>
                 <h5>totalsold: {{totalsold|floatformat:2}}</h5>
-            </div>
+            </div> -->
             
             <div class="col-4">
                 <input type="text" class="form-control search-invoice" placeholder="Rechercher ...">
@@ -177,7 +195,7 @@
                 <th style="width: 5%;"></th>
                 <th >Fourn.</th>
                 <th >info.</th>
-                <th>SOLD</th>
+                <!-- <th>SOLD</th> -->
                 
                 
             </tr>
@@ -196,9 +214,9 @@
                 <td class="suppinfo">
                     {{i.phone1}}
                 </td>
-                <td>
+                <!-- <td>
                     {{i.rest|floatformat:2}}
-                </td>
+                </td> -->
             </tr>
             {% endfor %}
             

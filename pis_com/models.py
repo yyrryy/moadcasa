@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models import Sum
 
 
 class DatedModel(models.Model):
@@ -75,7 +76,6 @@ class UserProfile(models.Model):
 
 class Customer(models.Model):
     #from pis_product.models import Supplier
-
     retailer = models.ForeignKey(
         'pis_retailer.Retailer',
         related_name='retailer_customer',
@@ -89,8 +89,19 @@ class Customer(models.Model):
     address = models.TextField(max_length=500, blank=True,null=True)
     shop = models.CharField(max_length=200, blank=True, null=True)
     supplier=models.ForeignKey('pis_product.Supplier', related_name="supplierofclient", on_delete=models.CASCADE, default=None, blank=True, null=True)
+
     def __unicode__(self):
         return self.customer_name
+    # def sold(self):
+    #     from pis_sales.models import SalesHistory
+    #     from pis_product.models import Avoir, PaymentClient 
+    #     bons = SalesHistory.objects.filter(customer=self)
+    #     paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
+    #     avoirs = Avoir.objects.filter(customer=self)
+    #     payments=PaymentClient.objects.filter(client=self)
+    #     totalcredit=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
+    #     totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    #     return float(totalbons)-float(totalcredit)-float(paid_amount)
 
 
 class FeedBack(models.Model):

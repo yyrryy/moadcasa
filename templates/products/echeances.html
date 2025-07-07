@@ -104,16 +104,16 @@
                 $('.typetotal').html(data.total)
             })
         }
-      inactive=localStorage.getItem('inactive')||'1'
-      console.log('>>>>> ', inactive)
-      if (inactive=='1'){
-        console.log('its inactive')
-        $('.passwordscreen').removeClass('d-none')
-        $('.passwordinput').focus()
-      }else{
-        console.log('its not inactive')
-        checkForInactivity(120)
-      }
+    //   inactive=localStorage.getItem('inactive')||'1'
+    //   console.log('>>>>> ', inactive)
+    //   if (inactive=='1'){
+    //     console.log('its inactive')
+    //     $('.passwordscreen').removeClass('d-none')
+    //     $('.passwordinput').focus()
+    //   }else{
+    //     console.log('its not inactive')
+    //     checkForInactivity(120)
+    //   }
        function makeecheancepaid(event, id){
         alertify.confirm("Confirmer le paiement", "Voulez vous vraiment marquer cette echeance comme payée?", function(){
             $.get('/product/makeecheancepaid', {'id':id}, (data)=>{

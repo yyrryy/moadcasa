@@ -9,9 +9,12 @@
 </head>
 <body>
     <div class="container w-75">
-        <button class="btn btn-primary" onclick="prt()">
-            Imprimer
-        </button>
+      <a class="btn btn-dark" href="/ledger/customer/{{customer.id}}/ledger/details/">
+        Retour
+      </a>
+      <button class="btn btn-primary" onclick="prt()">
+        Imprimer
+      </button>
         <div class="" id="print">
                 Relvé Client: {{customer.customer_name}} <br>
                 du {{start_date}} au {{end_date}}
@@ -29,7 +32,7 @@
                     <tr>
                       <td>
                         {% if i.1 == 'bon'%}
-                        {{i.0.datebon|date:'d/m/Y'}}
+                        {{i.0.datebon|date:'d/m/Y H:i'}}
                         {% elif i.1 == 'avoir'%}
                           {% if i.0.dateavoir == None %}{{i.0.created_at|date:"d/m/Y"}}{% else %}  {{i.0.dateavoir|date:"d/m/Y"}} {% endif %}
                         {% elif i.1 == 'reglement' or i.1 == 'relementsupp' or i.1 == 'avoirsupp' %}
@@ -44,7 +47,7 @@
                         {% elif i.1 == 'avoir'%}
                         Avoir {{i.0.receipt_no}}
                         {% elif i.1 == 'reglement'%}
-                        Reglement {{i.0.mode}} {% if i.0.npiece %}{{i.0.npiece}} {% endif %} {% if i.0.note %}({{i.0.note}}){% endif %}
+                        Reglement {{i.0.mode}} {% if i.0.npiece %}{{i.0.npiece}} {% endif %} {% if i.0.note %}({{i.0.note}}){% endif %} bon: {{i.0.bon.receipt_no}}
                         {% elif i.1 == 'relementsupp' %}
                         Reglement Frn. {{i.0.mode}} {% if i.0.npiece %}{{i.0.npiece}} {% endif %} {% if i.0.note %}({{i.0.note}}){% endif %}
                         {% elif i.1 == 'avoirsupp' %}
@@ -53,9 +56,10 @@
                         Bon achat N°{{i.0.nbon}}
                         {% endif %}
                       </td>
+                      <!-- {% if i.0.paid_amount > 0 %} (payé: {{i.0.paid_amount}}){% endif %} -->
                       <td>
                         {% if i.1 == 'bon'%}
-                        {{i.0.grand_total}}
+                        {{i.0.grand_total}} 
                         {% elif i.1 == 'relementsupp' %}
                         {{i.0.amount}}
                         {% elif i.1 == 'avoirsupp' %}
@@ -79,7 +83,8 @@
                     <td colspan="2">Totaux</td>
                     <td>{{totaldebit|floatformat:2}}</td>
                     <td>{{totalcredit|floatformat:2}}</td>
-                    <td>Sold: {{customer.rest|floatformat:2}}</td>
+                    <td>Soldperiode: {{soldperiod|floatformat:2}}</td>
+                   <!--  <td>Sold: {{customer.rest|floatformat:2}}</td> -->
                   </tr>
 
 
@@ -98,9 +103,9 @@
                 </tbody>
 
               </table>
-                <!-- <strong>
-                  Le rest: {{customer.rest|floatformat:2 }}  DH
-                </strong> -->
+                <strong>
+                  sold client: {{soldclient|floatformat:2 }}  DH
+                </strong> 
         </div>
 
     </div>

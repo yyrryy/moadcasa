@@ -42,14 +42,18 @@
                         <th>Sorties</th>
                         <th>{{totalout}}</th>
                     </tr>
+                    <tr>
+                        <th>Stock facture</th>
+                        <th>{{product.stockfacture}}</th>
+                    </tr>
                     <tr style="background: {%if product.stock <= 0%}red{%elif product.stock > 0 and product.stock == product.minstock%} yellow {%else%}yellowgreen{%endif%}; color:black;">
                         <th>Stock</th>
                         <th><strong class="oldstockqty">{{product.stock|floatformat:-2}} </strong>
-                            <!-- <button class="btn btn-info" onclick="$('.updatestock').toggleClass('d-none')"></button>
+                            <button class="btn btn-info" onclick="$('.updatestock').toggleClass('d-none')"></button>
                             <div class="updatestock d-none">
                                 <input type="number" class="qtystock">
                                 <button class="btn btn-success" onclick="updatestock('{{product.id}}')"></button>
-                            </div> -->
+                            </div>
                             <!-- <div class="accordion-item">
                                 <button class="accordion-button bg-white collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
 
@@ -156,10 +160,11 @@
 
 
                                     <td>
-
+                                        
                                         {% if i.status == 1 and i.reciept != None %}
                                         <strong>
-                                            <a type="button" onclick="bonentree({{i.reciept.id}})" class="text-success">{{i.reciept.supplier.name}}</a>
+                                            
+                                            <a type="button" onclick="bonentree({{i.reciept.id}})" class="text-success">{%if i.reciept.isfacture%}(FC){%endif%}{{i.reciept.supplier.name}}</a>
 
                                         </strong>
                                         {% elif i.receipt == None and i.avoir_reciept == None %}

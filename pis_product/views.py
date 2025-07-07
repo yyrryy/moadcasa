@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
+from django.utils.timezone import make_aware
 from django.shortcuts import render, redirect
 import json
+from collections import defaultdict
 from django.views.generic import TemplateView, UpdateView
 from django.views.generic import FormView, ListView
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
@@ -9,7 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper, Q, BooleanField, Case, When, Value
 from django.db.models.functions import Coalesce
-from pis_product.models import Outcaisse, PurchasedProduct, ExtraItems,StockOut, StockIn, Product, Category, Supplier, Itemsbysupplier, Avancesbon, Mark, PaymentSupplier, Avoirsupp, PaymentClient, Supplierprice, Clientprice, Returned, Outcaisseext, Outbank
+from pis_product.models import Outcaisse, PurchasedProduct, ExtraItems,StockOut, StockIn, Product, Category, Supplier, Itemsbysupplier, Avancesbon, Mark, PaymentSupplier, Avoirsupp, PaymentClient, Supplierprice, Clientprice, Returned, Outcaisseext, Outbank, Facture, Outfacture, Devis, Devisitems
 from pis_product.forms import (
     ProductForm, ProductDetailsForm, ClaimedProductForm,StockDetailsForm,StockOutForm, PurchasedProductForm)
 import pandas as pd
@@ -17,10 +19,10 @@ from django.views.decorators.csrf import csrf_exempt
 from pis_retailer.models import Retailer, RetailerUser
 from django.db.models import Count
 from django.db import transaction
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time
 from pis_sales.models import SalesHistory, Avoir
 from pis_com.models import Customer, UserProfile
-from itertools import chain
+from itertools import chain, groupby
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
@@ -48,7 +50,6 @@ def number_to_letters(num):
                 result += alphabet[index]  # Append the corresponding letter
 
     return result
-
 
 def letters_to_number(letters):
     result = ''
@@ -80,10 +81,12 @@ def createavoirclient(request, id):
 def createavoirsupp(request, id):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.cancreateavoirsupp:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     print('>>', id)
     bon=Itemsbysupplier.objects.get(pk=id)
     return render(request, 'products/avoirsupp.html', {
@@ -92,6 +95,34 @@ def createavoirsupp(request, id):
         'items':json.loads(bon.items)
         }
     )
+
+def clientprice(request):
+    clientid=request.GET.get('clientid')
+    productid=request.GET.get('productid')
+    print('>>> clientid, productid', clientid, productid)
+    ll=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=productid).last()
+    price=0.00
+    if ll:
+        print('>> ll', ll)
+        price=float(ll.price)
+    return JsonResponse({
+        'price':price
+    })
+
+# client price facture
+def clientpricefc(request):
+    clientid=request.GET.get('clientid')
+    productid=request.GET.get('productid')
+    print('>>> clientid, productid', clientid, productid)
+    ll=Outfacture.objects.filter(client_id=clientid, product_id=productid).last()
+    price=0.00
+    if ll:
+        print('>> ll', ll)
+        price=float(ll.price)
+    return JsonResponse({
+        'price':price
+    })
+
 
 def avoirsupdata(request):
     id=request.POST.get('id')
@@ -208,10 +239,12 @@ def addcaisseextern(request):
 def caisse(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseecaisse:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     # get payments of 10 last days
     retailer=Retailer.objects.get(pk=1)
     outs=Outcaisse.objects.all().order_by('-date')[:10]
@@ -257,10 +290,12 @@ def avoircomptoirpage(request):
 def exterieur(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseecaisseextern:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     # get pay  ments of 10 last days
     retailer=Retailer.objects.get(pk=1)
     ins=Outcaisse.objects.filter(externe=True).order_by('-date')[:31]
@@ -279,6 +314,9 @@ def addpaymentsclient(request):
     retailer=Retailer.objects.get(pk=1)
     client=Customer.objects.get(pk=request.POST.get('client'))
     date=request.POST.get('date')
+    time=request.POST.get('time')
+    datetime_str = f"{date} {time}" 
+    date = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
     mantant=request.POST.get('mantant')
     mode=request.POST.get('mode')
     echeance=request.POST.get('echeance') or None
@@ -287,13 +325,13 @@ def addpaymentsclient(request):
     if echeance != '' and echeance != None:
         echeance=datetime.strptime(echeance, '%Y-%m-%d')
     print(client.customer_name, mantant, mode, echeance)
-    PaymentClient.objects.create(
+    regl=PaymentClient.objects.create(
         date=date,
         client=client,
         amount=mantant,
         mode=mode,
         echeance=echeance,
-        note=note
+        note=note,
     )
     client.rest=float(client.rest)-float(mantant)
     client.save()
@@ -351,7 +389,8 @@ def getdeffusionpdct(request):
 
 def inventaire(request):
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     # check if its a post request
     if request.method == 'POST':
         id=request.POST.get('id')
@@ -403,16 +442,36 @@ def pondire(request):
         'pondire':True
     })
 
-def printavoirclient(request, id):
-    avoir=Avoir.objects.get(pk=id)
-    return render(request, 'sales/bon.html', {'inv':avoir, 'title':f'Bon avoir #{avoir.receipt_no}', 'avoir':True})
+def avoirprint(request, id):
+    order=Avoir.objects.get(pk=id)
+    orderitems=StockIn.objects.filter(avoir_reciept=order)
+    # split the orderitems into chunks of 10 items
+    orderitems=list(orderitems)
+    orderitems=[orderitems[i:i+37] for i in range(0, len(orderitems), 37)]
+    tva=round(float(order.grand_total)-(float(order.grand_total)/1.2), 2)
+    
+    #text neartotalweather it's avance or paid
+    
+
+    ctx={
+        'title':f'bon {order.receipt_no}',
+        'facture':order,
+        'orderitems':orderitems,
+        'tva':tva,
+        'ttc':order.grand_total,
+        'ht':round(float(order.grand_total)-tva, 2),
+    }
+    return render(request, 'products/avoirprint.html', ctx)
+    # return render(request, 'products/avoirprint.html', {'inv':avoir, 'title':f'Bon avoir #{avoir.receipt_no}', 'avoir':True})
 def avoirsupp(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.cancreateavoirsupp:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     cts={
         'title': 'Avoir Fournisseur',
         'suppliers':Supplier.objects.all(),
@@ -422,10 +481,12 @@ def avoirsupp(request):
 def generateavoirsupp(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.cancreateavoirsupp:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     supplierid=request.POST.get('supplierid')
     date=request.POST.get('date')
     date=datetime.strptime(f'{date}', '%Y-%m-%d')
@@ -494,10 +555,15 @@ def relveclient(request):
     customer = request.GET.get('customer')
     start_date = datetime.strptime(start_date_str[:10], '%d/%m/%Y')
     end_date = datetime.strptime(end_date_str[:10], '%d/%m/%Y')
-    print(start_date, end_date)
+    end_date = datetime.combine(end_date, time(23, 59, 59))
+    # start_date = make_aware(start_date)
+    # end_date = make_aware(end_date)
+    # print(start_date, end_date)
     bons = SalesHistory.objects.filter(customer_id=customer, datebon__range=[start_date, end_date]).order_by('datebon')
+    print('>> count', bons.count())
+    paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
     avoirs = Avoir.objects.filter(customer_id=customer, dateavoir__range=[start_date, end_date])
-    payments=PaymentClient.objects.filter(client_id=customer, date__range=[start_date, end_date])
+    payments=PaymentClient.objects.filter(isfacture=False, client_id=customer, date__range=[start_date, end_date])
     sales_and_returns = chain(bons, avoirs, payments)
     customer=Customer.objects.get(pk=customer)
     totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
@@ -540,7 +606,15 @@ def relveclient(request):
         releve.extend((avoirsupp, 'avoirsupp') for avoirsupp in avoirsupp_)
         if avoirsupp_:
             totalbons+=avoirsupp_.aggregate(Sum('total')).get('total__sum') or 0
-    sold=float(totalbons)-float(totalcredit)
+    soldperiod=float(totalbons)-float(totalcredit)
+    clientpayments=PaymentClient.objects.filter(client=customer)
+    bonsclient = SalesHistory.objects.filter(customer=customer)
+    paid_amounclientt= bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
+    avoirsclient = Avoir.objects.filter(customer=customer)
+    paymentsclient= PaymentClient.objects.filter(client=customer, isfacture=False)
+    totalbonsclient=bonsclient.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    totalcreditclient=(avoirsclient.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(paymentsclient.aggregate(Sum('amount')).get('amount__sum') or 0)
+    soldclient=float(totalbonsclient)-float(totalcreditclient)
     #sorted_releve = sorted(releve, key=get_date)
 
     #print(sorted_releve)
@@ -551,7 +625,8 @@ def relveclient(request):
     return render(request, 'products/relveclient.html', {'releve':sorted_releve, 'sales_and_returns': sales_and_returns, 'bons': bons, 'avoirs':avoirs, 'payments':payments, 'title':f'Relevé client {customer} du {start_date_str} au {end_date_str}', 'customer':customer, 'start_date':start_date_str, 'end_date':end_date_str,
     'totaldebit':totalbons,
     'totalcredit':totalcredit,
-    'sold':sold
+    'soldperiod':soldperiod,
+    'soldclient':soldclient
     })
 
 
@@ -650,21 +725,86 @@ def bondata(request):
     bon=SalesHistory.objects.get(pk=id)
     #here
     items=PurchasedProduct.objects.filter(invoice=bon)
-
+    payments=PaymentClient.objects.filter(bon=bon)
     avoirs=Avoir.objects.filter(bon=bon)
     print(avoirs)
     return JsonResponse({
         'data':render(request, 'products/bondata.html', {'bon':bon,
-        'avoir':False, 'avoirs':avoirs, 'items':items
+        'avoir':False, 'avoirs':avoirs, 'items':items, 'payment':payments
         }).content.decode('utf-8')
+    })
+
+@csrf_exempt
+def devisdata(request):
+    id=request.POST.get('id')
+    devis=Devis.objects.get(pk=id)
+    #here
+    items=Devisitems.objects.filter(devis=devis)
+    return JsonResponse({
+        'data':render(request, 'products/devisdata.html', {'devis':devis,
+        'avoir':False, 'items':items
+        }).content.decode('utf-8')
+    })
+
+
+def facturedata(request):
+    id=request.GET.get('id')
+    facture=Facture.objects.get(pk=id)
+    #here
+    items=Outfacture.objects.filter(facture=facture)
+    
+    return JsonResponse({
+        'data':render(request, 'products/facturedata.html', {'facture':facture,
+        'items':items
+        }).content.decode('utf-8')
+    })
+
+def modifierfacture(request):
+    id=request.GET.get('id')
+    facture=Facture.objects.get(pk=id)
+    items=Outfacture.objects.filter(facture=facture)
+    return render(request, 'products/modifierfacture.html', {'facture':facture,
+        'items':items
+    })
+
+def updatefacture(request):
+    id=request.GET.get('id')
+    total=request.GET.get('total')
+    items = json.loads(request.GET.get('items'))
+    facture=Facture.objects.get(pk=id)
+    olditems=Outfacture.objects.filter(facture=facture)
+    for i in olditems:
+        # stock facture
+        product=i.product
+        product.stockfacture+=float(i.qty)
+        product.save()
+    olditems.delete()
+    facture.total=total
+    for i in items:
+        product=Product.objects.get(pk=i.get('item_id'))
+        product.stockfacture-=float(i.get('qty'))
+        product.save()
+        Outfacture.objects.create(
+            facture=facture,
+            total=i.get('total'),
+            product=product,
+            qty=i.get('qty'),
+            price=i.get('price'),
+            date=facture.date,
+            client=facture.client
+        )
+    facture.save()
+    return JsonResponse({
+        'success':True
     })
 
 @csrf_exempt
 def avoirdata(request):
     id=request.POST.get('id')
     bon=Avoir.objects.get(pk=id)
+    items=StockIn.objects.filter(avoir_reciept=bon)
     return JsonResponse({
-        'data':render(request, 'products/bondata.html', {'bon':bon, 'avoir':True}).content.decode('utf-8')
+        'data':render(request, 'products/bondata.html', {'bon':bon, 'avoir':True, 'items':items}).content.decode('utf-8')
     })
 
 def duplicate(request):
@@ -716,7 +856,7 @@ def refreshitemssupplier(request):
 
 
 def searchrefinstock(request):
-    ref=request.POST.get('ref')
+    ref=request.POST.get('ref').strip()
     # Split the term into individual words separated by '*'
     search_terms = ref.split('*')
 
@@ -770,13 +910,13 @@ def filtercommandesupp(request):
     })
 
 # add new ledger from modal
-@csrf_exempt
 def addclient(request):
-    name=request.POST.get('name')
-    phone=request.POST.get('phone')
-    address=request.POST.get('address')
-    ice=request.POST.get('ice')
-    sold=request.POST.get('sold') or 0
+    name=request.GET.get('name')
+    phone=request.GET.get('phone')
+    address=request.GET.get('address')
+    ice=request.GET.get('ice')
+    sold=request.GET.get('sold') or 0
+    print(">>>",request.GET, name, phone, address, ice)
     client=Customer.objects.create(rest=sold, customer_name=name,customer_phone=phone, address=address, ice=ice, retailer=Retailer.objects.get(id=request.user.retailer_user.retailer.id))
     return JsonResponse({'status':True, 'id':client.id})
 
@@ -794,10 +934,12 @@ def checkclient(request):
 def productslistbycategory(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseeproduits:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     categories = Category.objects.filter(parent=None).order_by('name')
     cc = Category.objects.filter(children__isnull=True).order_by('name')
     parents = Category.objects.all()
@@ -842,10 +984,12 @@ def retour(request):
 def lowstock(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseealerts:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     supplierid=request.POST.get('supplierid')
     products=Product.objects.filter(stock__lte=F('minstock')).annotate(
     is_preferred_supplier=Case(
@@ -978,10 +1122,12 @@ def loadpdctsinstock(request):
 def productscommande(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseecommandes:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     #products=Product.objects.filter(command=True)
     suppliers=Supplier.objects.filter(
                 command_supplier__in=Product.objects.all()
@@ -1039,10 +1185,12 @@ def searchproductsincategory(request):
 def addbulkcategory(request):
     userprofile=UserProfile.objects.get(user=request.user)
     # if not request.user.retailer_user.retailer.working:
-    return render(request, 'products/nopermission.html')
+    # return render(request, 'products/nopermission.html')
+    pass
     # if not request.user.retailer_user.role_type=='owner':
     #     if not userprofile.canaddbulkcategory:
-    #         return render(request, 'products/nopermission.html')
+    # #         return render(request, 'products/nopermission.html')
+    pass
     myfile=request.FILES["excel_file"]
     category=request.POST.get('category')
     retailer=request.user.retailer_user.retailer
@@ -1086,10 +1234,12 @@ def addbulkcategory(request):
 def addcategory(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canaddcategory:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     category=request.POST.get('category')
     parent=None if request.POST.get('parent')=='0' else Category.objects.get(pk=request.POST.get('parent'))
     Category.objects.create(name=category, parent=parent)
@@ -1098,10 +1248,12 @@ def addcategory(request):
 def deletecategory(request, id):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.candeletecategory:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     category=Category.objects.get(pk=id)
     category.delete()
     return redirect('product:categories')
@@ -1205,10 +1357,10 @@ def product_search(request):
 
 @csrf_exempt
 def searchglobal(request):
-    term = request.POST.get('global')
+    term = request.POST.get('global').strip()
 
     # Split the term into individual words separated by '*'
-    search_terms = term.split('*')
+    search_terms = term.split('+')
 
     # Create a list of Q objects for each search term and combine them with &
     q_objects = Q()
@@ -1365,10 +1517,12 @@ def deletemark(request):
 def marks(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseelistmarks:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     return render(request, 'products/marks.html', {'title':'les marques', 'marks':Mark.objects.all()})
 
 @csrf_exempt
@@ -1380,10 +1534,12 @@ def addmark(request):
 # def addoneproduct(request):
 #     userprofile=UserProfile.objects.get(user=request.user)
 # if not request.user.retailer_user.retailer.working:
-# return render(request, 'products/nopermission.html')    
+# # return render(request, 'products/nopermission.html')
+# pass    
 # if not request.user.retailer_user.role_type=='owner':
 # if not userprofile.canaddproduct:
-#           return render(request, 'products/nopermission.html')
+# #           return render(request, 'products/nopermission.html')
+pass
 #     # get data from formData sent from the ajax request
 #     # name = request.POST.get('name').strip()
 #     mark = request.POST.get('mark')
@@ -1454,29 +1610,30 @@ def addmark(request):
 def addoneproduct(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canaddproduct:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     # get data from formData sent from the ajax request
-    # name = request.POST.get('name').strip()
-    mark = request.POST.get('mark')
+    
+    mark = request.POST.get('mark') or request.POST.get('markinadd')
     supplier =request.POST.get('originsupp') or None
     #price = request.POST.get('price')
     stock=request.POST.get('stock') or 0
     minstock=request.POST.get('minstock') or 0
     prachat = request.POST.get('prachat') or 0
-    prventegro = request.POST.get('prventegro')
-    prventemag = request.POST.get('prventemag')
-    print('>> prv', prventemag, prventegro)
     remise = request.POST.get('remise') or 0
+    prventegro = request.POST.get('prventegro') or 0
+    prventemag = request.POST.get('prventemag') or 0
     priceslist=[]
     if not supplier == None and not stock == 0:
         suppliername=Supplier.objects.get(pk=supplier)
         priceslist=[[f'{suppliername} - stockinitial', date.today().strftime('%d/%m/%Y'), float(prachat), float(stock)]] if prachat != 0 else []
-    car=request.POST.get('car').strip() or ""
-    ref=request.POST.get('ref').strip().lower() or ""
-    category=request.POST.get('category')
+    car=request.POST.get('car').strip() or request.POST.get('carinadd').strip()
+    ref=request.POST.get('ref').strip().lower() or request.POST.get('refinadd').strip().lower()
+    category=request.POST.get('category') or request.POST.get('categoryinadd')
     image = request.FILES.get('image')
     prnet=round(float(prachat)-(float(prachat)*float(remise)/100), 2) if prachat != 0 else 0
     print(ref, car, supplier, mark, stock, minstock, prachat, remise, category, image)
@@ -1498,12 +1655,12 @@ def addoneproduct(request):
         image=image,
         prices=json.dumps(priceslist)
     )
-    st=StockIn.objects.create(
-        product=product,
-        quantity=stock,
-        price=prachat
-    )
-    st.supplier_id=supplier
+    if stock>0:
+        StockIn.objects.create(
+            product=product,
+            quantity=stock,
+            price=prachat
+        )
     originref=product.ref.split(' ')[0]
     simillar = Product.objects.filter(category=category).filter(Q(ref__startswith=originref+' ') | Q(ref=originref))
     sim=any([i.stock for i in simillar])
@@ -1531,12 +1688,52 @@ def addoneproduct(request):
     # if request.POST.get('dest')=='receive':
     # return redirect('product:productslistbycategory')
 
+def addoneproductinbase(request):
+    userprofile=UserProfile.objects.get(user=request.user)
+    if not request.user.retailer_user.retailer.working:
+        # return render(request, 'products/nopermission.html')
+        pass
+    if not request.user.retailer_user.role_type=='owner':
+        if not userprofile.canaddproduct:
+            # return render(request, 'products/nopermission.html')
+            pass
+    # get data from formData sent from the ajax request
+    
+    mark = request.POST.get('markinadd')
+    
+    #price = request.POST.get('price')
+    car=request.POST.get('carinadd').strip()
+    ref=request.POST.get('refinadd').strip().lower()
+    category=request.POST.get('categoryinadd')
+    product=Product.objects.create(
+        retailer=request.user.retailer_user.retailer,
+        # name=name.strip(),
+        pr_achat=0,
+        category_id=category,
+        stock=0,
+        remise=0,
+        minstock=0,
+        prnet=0,
+        prvente=0,
+        price=0,
+        car=car,
+        ref=ref,
+        mark_id=mark,
+    )
+    
+    return JsonResponse({
+    'success':True
+    })
+    # if request.POST.get('dest')=='receive':
+    # return redirect('product:productslistbycategory')
+
+
 
 def checkref(request):
-    ref=request.GET.get('ref').lower().split()[0]
+    ref=request.GET.get('ref').lower().strip()
     categoryid=request.GET.get('categoryid')
-    product=Product.objects.filter(category=categoryid).filter(Q(ref__startswith=ref+' ') | Q(ref=ref)).exists()
-    print(ref)
+    product=Product.objects.filter(ref=ref).exists()
+    print(ref, 'eee')
     if product:
         return JsonResponse({
             'exist':True,
@@ -1566,9 +1763,11 @@ def validcommande(request):
 
 # new view to update product from the modals
 def updateproduct(request, id):
+    print('>>> id', id)
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.caneditproducts:
             return JsonResponse({
@@ -1578,18 +1777,19 @@ def updateproduct(request, id):
     # get data from formData sent from the ajax request
     try:
         image = request.FILES.get('updateimage')
-        ref = request.POST.get('updateref').lower()
+        ref = request.POST.get('updateref').lower().strip()
         # name = request.POST.get('name')
         car = request.POST.get('updatecar')
         minstock = request.POST.get('updateminstock')
-        price = request.POST.get('updateprice')
-        #price = request.POST.get('updateprice')
+        price = request.POST.get('updatepricemag')
+        pricevente = request.POST.get('updatepricegro')
         #prachat = request.POST.get('updatepr_achat')
         #remise=request.POST.get('updateremise')
         product=Product.objects.get(pk=id)
         category=Category.objects.get(pk=request.POST.get('updatecategory'))
         exist=Product.objects.filter(category=category, ref=ref).exclude(pk=id).exists()
         if exist:
+            print('already exist')
             return JsonResponse({
                 'status':False,
                 'error': 'Ref already exist in this Category'
@@ -1603,8 +1803,8 @@ def updateproduct(request, id):
             #print('rrr',prnet)
             #product.name=name
             product.ref=ref
-            product.prvente=price
-            # product.price=price
+            product.prvente=pricevente
+            product.price=price
             product.car=car
             product.minstock=minstock
             product.mark=mark
@@ -1637,7 +1837,8 @@ def updateproduct(request, id):
                 'prachat':product.pr_achat,
                 'remise':product.remise,
             })
-    except:
+    except Exception as e:
+        print('>> error', e)
         return JsonResponse({
             'status': False,
             'error': 'Eror'
@@ -1704,10 +1905,12 @@ def producthistory(request, id):
     from operator import attrgetter
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canviewproduct:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     product=Product.objects.get(pk=id)
     pr=StockIn.objects.filter(product=product).order_by('-dated_order')
     stockout=PurchasedProduct.objects.filter(product=product, invoice__ismanual=False, invoice__isdevis=False)
@@ -1759,72 +1962,97 @@ def priceevolution(request):
 
 def reports(request):
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
-    return render(request, 'products/reports.html', {'title':'Rapports'})
+        # return render(request, 'products/nopermission.html')
+        pass
+    # Calculate total stock value for all suppliers
+    soldsuppliers = sum(supplier.sold() for supplier in Supplier.objects.all())
+    stockgeneral = sum(s.totalstock() for s in Supplier.objects.all())
+    clients=Customer.objects.all()
+    bons=0
+    avoirs=0
+    avances=0
+    reglements=0
+    for i in clients:
+        print('>>', i.customer_name)
+        bons+=SalesHistory.totalclient(customer=i)
+        avoirs+=Avoir.totalclient(customer=i)
+        #avances+=SalesHistory.totalclientavance(customer=i)
+        reglements+=PaymentClient.totalclientbl(customer=i)
+    soldclients=round(bons-avoirs-reglements, 2)
+    print('>>', bons, avoirs, reglements, soldclients)
+    return render(request, 'products/reports.html', {'title':'Rapports', 'stockgeneral':stockgeneral, 'soldclients':soldclients, 'soldsuppliers':soldsuppliers})
 
 
 def reportnetprofit(request):
-    # year=this_year if request.POST.get('year')=='0' else request.POST.get('year')
-    # month=False if request.POST.get('month')=='0' else request.POST.get('month')
-    try:
-        # Parse dates from POST data
-        datefrom = request.POST.get('datefrom')
-        dateto = request.POST.get('dateto')
-    except (TypeError, ValueError):
-        return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
-    print(datefrom, dateto)
-    bons=SalesHistory.objects.filter(datebon__range=[datefrom, dateto])
-    avoirs=Avoir.objects.filter(dateavoir__range=[datefrom, dateto])
-    bonachat=Itemsbysupplier.objects.filter(bondate__range=[datefrom, dateto])
-    totalprofit=round(bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0, 2)
-    totalcost=round(bonachat.aggregate(Sum('total')).get('total__sum') or 0, 2)
-    totalavoir=round(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0, 2)
-    totalcost=round(float(totalcost)+float(totalavoir), 2)
-    profit=round(float(totalprofit)-float(totalcost), 2)
-    # if month:
-    #     totalprofit=round(SalesHistory.objects.filter(
-    #         created_at__year=year, created_at__month=month
-    #         ).aggregate(
-    #         total_revenue=Sum('paid_amount')
-    #     )['total_revenue'] or 0, 2)
-
-    #     totalcost=round(Product.objects.filter(
-    #         stockin_product__dated_order__year=year, stockin_product__dated_order__month=month
-    #         ).annotate(
-    #             total_items=Sum('stockin_product__quantity')
-    #         ).aggregate(
-    #             total_cost=ExpressionWrapper(Sum(F('pr_achat') * F('total_items'), output_field=DecimalField()), output_field=DecimalField())
-    #         )['total_cost'] or 0, 2)
-    # else:
-    #     totalprofit=round(SalesHistory.objects.filter(
-    #         created_at__year=year
-    #         ).aggregate(
-    #         total_revenue=Sum('paid_amount')
-    #     )['total_revenue'] or 0, 2)
-    #     totalcost=round(Product.objects.filter(
-    #         stockin_product__dated_order__year=year
-    #         ).annotate(
-    #             total_items=Sum('stockin_product__quantity')
-    #         ).aggregate(
-    #             total_cost=ExpressionWrapper(Sum(F('pr_achat') * F('total_items'), output_field=DecimalField()), output_field=DecimalField())
-    #         )['total_cost'] or 0, 2)
-
-
-
-
-    #for i in products:
-        #totalcost+=round(float(i.stock)*float(i.pr_achat), 2)
-        # stockout=PurchasedProduct.objects.filter(product=i)
-        # if stockout:
-        #     for i in stockout:
-        #         totalprofit+=i.purchase_amount
-
-
+    datefrom=request.POST.get('datefrom')
+    dateto=request.POST.get('dateto')
+    # year=request.POST.get('year')
+    # month=request.POST.get('month')
+    sales=round(PurchasedProduct.objects.filter(product__pr_achat__gt=0, isavoirsupp=False, invoice__datebon__range=[datefrom, dateto]
+        ).aggregate(
+        total_revenue=Sum('purchase_amount')
+    )['total_revenue'] or 0, 2)
+    avoircl=round(Avoir.objects.filter(dateavoir__range=[datefrom, dateto]
+        ).aggregate(
+        total=Sum('grand_total')
+    )['total'] or 0, 2)
+    achats=round(StockIn.objects.filter(dated_order__range=[datefrom, dateto]
+        ).aggregate(
+            total_cost=Sum(('total'))
+        )['total_cost'] or 0, 2)
+    avoirsupp=round(Avoirsupp.objects.filter(date__range=[datefrom, dateto]
+        ).aggregate(
+        total=Sum('total')
+    )['total'] or 0, 2)
+    ventes=PurchasedProduct.objects.filter(product__pr_achat__gt=0, isavoirsupp=False, invoice__datebon__date__range=[datefrom, dateto])
+    trs=''
+    totalmarge=0
+    for  i in ventes:
+        diff=round(i.price-i.product.prnet, 2)
+        marge=round(diff*i.quantity, 2)
+        totalmarge=round(marge+totalmarge, 2)
+        trs+=f'''
+            <tr>
+                <td>
+                    {i.invoice.datebon.strftime('%d/%m/%Y')}
+                </td>
+                <td>
+                    {i.product.ref}
+                </td>
+                <td>
+                    {i.product.pr_achat}
+                </td>
+                <td>
+                    {i.product.remise}
+                </td>
+                <td>
+                    {round(i.product.prnet, 2)}
+                </td>
+                <td>
+                    {i.price}
+                </td>
+                
+                <td>
+                    {diff}
+                </td>
+                <td>
+                    {i.quantity}
+                </td>
+                <td>
+                    {marge}
+                </td>
+            </tr>
+        '''
 
     return JsonResponse({
-        'totalprofit':totalprofit,
-        'totalcost':totalcost,
-        'netprofit':profit
+        'sales':sales,
+        'avoircl':avoircl,
+        'achats':achats,
+        'avoirsupp':avoirsupp,
+        'netprofit':round(float(sales)-float(achats)+float(avoirsupp)-float(avoircl), 2),
+        'ventes':trs,
+        'totalmarge':totalmarge
+        # 'ventes':render(request, 'products/journalventes.html', {'sales':PurchasedProduct.objects.filter(isavoirsupp=False, created_at__year=year, created_at__month=month)}).content.decode('utf-8'),
     })
 
 
@@ -1839,24 +2067,22 @@ def clientsranking(request):
     })
 
 def productsranking(request):
-    datefrom = datetime.strptime(request.POST.get('datefrom'), '%Y-%m-%d')
-    dateto = datetime.strptime(request.POST.get('dateto'), '%Y-%m-%d')
-    
-    products = (
-    PurchasedProduct.objects.filter(
-        invoice__datebon__range=[datefrom, dateto]
+    # year=this_year if request.POST.get('year')=='0' else request.POST.get('year')
+    # month=False if request.POST.get('month')=='0' else request.POST.get('month')
+    year=request.POST.get('year')
+    month=request.POST.get('month')
+    products = products = (
+    PurchasedProduct.objects.filter(isavoirsupp=False, 
+        created_at__year=year, created_at__month=month
         ).values('product')
     .annotate(
         total_quantity=Sum('quantity'),
         total_purchase_amount=Sum('purchase_amount')
     )
     .order_by('-total_quantity')
-    .values('product__ref', 'product__category__name', 'total_quantity', 'total_purchase_amount')[:10]
+    .values('product__ref', 'total_quantity', 'total_purchase_amount')[:10]
     )
-    print('>> purchased', PurchasedProduct.objects.filter(
-        created_at__range=[datefrom, dateto]))
-    # year=this_year if request.POST.get('year')=='0' else request.POST.get('year')
-    # month=False if request.POST.get('month')=='0' else request.POST.get('month')
+    print('>>>products', products)
     # if month:products = (
     # PurchasedProduct.objects.filter(
     #     created_at__year=year, created_at__month=month
@@ -2043,28 +2269,33 @@ def dailystatsstock(request):
 def supply(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.cancreatebonachat:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     cc = Category.objects.filter(children__isnull=True).order_by('name')
-
+    facture=request.GET.get('facture')=="1"
 
     ctx={
-        'title':'Recevoir des peoduits',
+        'title':'+ Bon achat',
         'children':cc,
         'suppliers':Supplier.objects.all(),
-        'marks':Mark.objects.all()
+        'marks':Mark.objects.all(),
+        'facture':'1' if facture else '0'
     }
     return render(request, 'products/supply.html', ctx)
 
 def addproduct(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseeproduits:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     cc = Category.objects.filter(children__isnull=True).order_by('name')
 
 
@@ -2107,8 +2338,11 @@ def addpaymentssupp(request):
 def updatebonachat(request, id):
     bon=Itemsbysupplier.objects.get(pk=id)
     bonitems=StockIn.objects.filter(reciept=bon)
+    facture=request.GET.get('facture')
     if request.method=="POST":
         nbon=request.POST.get('nbon')
+        facture=request.POST.get('facture')=='1'
+        print('>> isfacture', facture)
         bondate=request.POST.get('bondate')
         newsupplier=Supplier.objects.get(pk=request.POST.get('supplier'))
         oldsupplier=bon.supplier
@@ -2126,13 +2360,17 @@ def updatebonachat(request, id):
             newsupplier.save()
         bon.bondate=bondate
         bon.nbon=nbon
+        bon.supplier=newsupplier
         bon.total=request.POST.get('total')
         bon.save()
         items = json.loads(request.POST.get('items'))
         # bon items are the items of this bon before modification
         for i in bonitems:
             product=i.product
-            product.stock=float(product.stock)-float(i.quantity)
+            if facture:
+                product.stockfacture=float(product.stockfacture)-float(i.quantity)
+            else:
+                product.stock=float(product.stock)-float(i.quantity)
             product.save()
             i.delete()
         for i in items:
@@ -2141,14 +2379,14 @@ def updatebonachat(request, id):
             remise=float(i.get('remise') or 0)
             product = Product.objects.get(pk=item)
             # add supplierprice
-            supplierprice=Supplierprice.objects.filter(supplier=newsupplier, product=product).first()
-            if supplierprice:
-                supplierprice.price=float(i['price'])
-                supplierprice.qty=int(i['qty'])
-                supplierprice.remise=remise
-                supplierprice.save()
-            else:
-                Supplierprice.objects.create(supplier=newsupplier, product=product, price=float(i['price']), qty=int(i['qty']), remise=remise)
+            # supplierprice=Supplierprice.objects.filter(supplier=newsupplier, product=product).first()
+            # if supplierprice:
+            #     supplierprice.price=float(i['price'])
+            #     supplierprice.qty=int(i['qty'])
+            #     supplierprice.remise=remise
+            #     supplierprice.save()
+            # else:
+            #     Supplierprice.objects.create(supplier=newsupplier, product=product, price=float(i['price']), qty=int(i['qty']), remise=remise)
             # if(not float(i['price'])==0):
             # product.pr_achat=float(i['price'])
             prices=json.loads(product.prices)
@@ -2204,7 +2442,14 @@ def updatebonachat(request, id):
                 remise=remise,
                 reciept=bon
             )
-            product.stock=float(product.stock)+float(i['qty'])
+            
+            
+            
+            if facture:
+                print('>>> add to stockfacture')
+                product.stockfacture=float(product.stockfacture)+float(i['qty'])
+            else:
+                product.stock=float(product.stock)+float(i['qty'])
             product.pr_achat=float(i['price']) #here
             prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
             product.prnet=prnet
@@ -2221,7 +2466,8 @@ def updatebonachat(request, id):
     ctx={
         'title':'Modifier bon Achat N° '+bon.nbon,
         'bon':bon,
-        'items':bonitems
+        'items':bonitems,
+        'facture':facture
     }
     return render(request, 'products/updatebonacht.html', ctx)
 
@@ -2229,6 +2475,7 @@ def updatebonachat(request, id):
 def addsupply(request):
     nbon=request.POST.get('nbon').lower().strip()
     bondate=request.POST.get('bondate')
+    facture=request.POST.get('facture')=='1'
     items = json.loads(request.POST.get('items'))
     supplier=Supplier.objects.get(pk=request.POST.get('supplier'))
     # check if bon with the same supplier and nbon exist
@@ -2241,7 +2488,7 @@ def addsupply(request):
     supplier.total=float(request.POST.get('total'))+float(supplier.total)
     supplier.rest=float(request.POST.get('total'))+float(supplier.rest)
     supplier.save()
-    reciept=Itemsbysupplier.objects.create(supplier=supplier, total=float(request.POST.get('total')), nbon=nbon, rest=float(request.POST.get('total')), bondate=bondate)
+    reciept=Itemsbysupplier.objects.create(supplier=supplier, total=float(request.POST.get('total')), nbon=nbon, rest=float(request.POST.get('total')), bondate=bondate, isfacture=facture)
     with transaction.atomic():
         for i in items:
 
@@ -2261,50 +2508,22 @@ def addsupply(request):
                 # assign pondire with 35%
                 #product.pondire=round((pondire*100)/65, 2)
                 product.pondire=pondire
-            # add supplierprice
-            supplierprice=Supplierprice.objects.filter(supplier=supplier, product=product).first()
-            if supplierprice:
-                supplierprice.price=float(i['price'])
-                supplierprice.qty=int(i['qty'])
-                supplierprice.remise=remise
-                supplierprice.save()
-            else:
-                Supplierprice.objects.create(supplier=supplier, product=product, price=float(i['price']), qty=int(i['qty']), remise=remise)
-            # if(not float(i['price'])==0):
-            # product.pr_achat=float(i['price'])
+            
             prices=json.loads(product.prices)
 
             prices.append([f'{supplier.name} - {reciept.nbon}', bondate, float(i['price']), float(i['qty'])])
-            # qts=0
-            # prcs=0
-            # for b in prices:
-            #     qts+=b[3]
-            #     prcs+=b[2]*b[3]
-            # pondire=round(prcs/qts, 2)
-            # price achat will be new price
+           
             product.pr_achat=float(i['price'])
             prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
             product.prnet=prnet
             product.remise=remise
-            product.price=i['prventmag']
-            product.prvente=i['prventgro']
+            product.price=i['prventmag'] or 0
+            product.prvente=i['prventgro'] or 0
             product.prices=json.dumps(prices)
-            # if float(product.pr_achat)!=float(i['price']):
-            #     print('not equal')
-            #     prices.append([float(i['price']), float(i['qty'])])
-            #     product.prices=json.dumps(prices)
-            # else:
-            #     print('equal')
-            #     for i, price in enumerate(prices):
-            #         if price[0] == float(i['price']):
-            #             # update the second item in the nested list
-            #             prices[i][1] =float(prices[i][1])+float(i['qty'])
-            #     product.prices=json.dumps(prices)
-            # or get the average pr_achat
-            #product.pr_achat=round((float(product.pr_achat)+float(i['price']))/2, 2)
             product.command=False
             product.originsupp=supplier
             product.supplier=None
+            print('>> price', i['price'])
             StockIn.objects.create(
                 product=product,
                 quantity=float(i['qty']),
@@ -2314,7 +2533,10 @@ def addsupply(request):
                 remise=remise,
                 reciept=reciept
             )
-            product.stock=float(product.stock)+float(i['qty'])
+            if facture:
+                product.stockfacture=float(product.stockfacture)+float(i['qty'])
+            else:
+                product.stock=float(product.stock)+float(i['qty'])
             product.save()
             originref=product.ref.split(' ')[0]
             simillar = Product.objects.filter(category=product.category.id).filter(Q(ref__startswith=originref+' ') | Q(ref=originref))
@@ -2339,27 +2561,52 @@ def bonentree(request, id):
     })
 
 def bonsentrees(request):
+    facture=request.GET.get('facture')=='1'
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseelistbonsachat:
-            return render(request, 'products/nopermission.html')
-    bb=Itemsbysupplier.objects.all().order_by('-bondate')
+            # return render(request, 'products/nopermission.html')
+            pass
+    if facture:
+        bb=Itemsbysupplier.objects.filter(isfacture=True).order_by('-bondate')
+    else:
+        bb=Itemsbysupplier.objects.all().order_by('-bondate')
     return render(request, 'products/supplierslist.html', {
         'title':'Liste Bons Fournisseurs',
         'bonslist':bb,
         # bons is true to add condition in template to only use one teplate for suppliers list and bons list
-        'bons':True
+        'bons':True,
+        'facture':facture,
     })
+
+def listdevis(request):
+    userprofile=UserProfile.objects.get(user=request.user)
+    if not request.user.retailer_user.retailer.working:
+        # return render(request, 'products/nopermission.html')
+        pass
+    if not request.user.retailer_user.role_type=='owner':
+        if not userprofile.canseelistbonsachat:
+            # return render(request, 'products/nopermission.html')
+            pass
+    devis=Devis.objects.all().order_by('-date')
+    return render(request, 'products/listdevis.html', {
+        'title':'Liste list devis',
+        'devis':devis,
+    })
+
 
 def supplierslist(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseesuppliers:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     suppliers=Supplier.objects.all().order_by('name')
     # supplier_data = []
     # for supplier in suppliers:
@@ -2376,10 +2623,12 @@ def supplierslist(request):
 def supplierinfo(request, id):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseesupplier:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     supplier=Supplier.objects.get(pk=id)
     payments=PaymentSupplier.objects.filter(supplier=supplier).order_by('-date')[:30]
     nbrpayments=payments.count()
@@ -2393,14 +2642,6 @@ def supplierinfo(request, id):
     supplierCurrentValue = Product.objects.filter(
         originsupp=supplier, stock__gt=0
     ).aggregate(total_value=Sum(F('prnet') * F('stock')))['total_value'] or 0
-    # productsofsupplier=Product.objects.filter(originsupp=supplier, stock__gt=0)
-    
-    # #finish this, ch7al dyal sl3a kaina dyal had lfournisseur
-    # print('productsofsupplier', productsofsupplier, supplier.name)
-    # supplierCurrentValue=0
-    # for i in productsofsupplier:
-    #     supplierCurrentValue+=float(i.prnet)*float(i.stock)
-    
     return render (request, 'products/supplierinfo.html', {
         'title':supplier.name.upper()+' Situation',
         'bons':bons,
@@ -2943,6 +3184,7 @@ def deleteproduct(request):
 
 def searchproduct(request):
     term = request.GET.get('term')
+    facture = request.GET.get('facture')=='1'
     print(term)
     search_terms = term.split('+')
 
@@ -2957,8 +3199,9 @@ def searchproduct(request):
     products = Product.objects.filter(q_objects)
     results=[]
     for i in products:
+        stock=i.stockfacture if facture else i.stock
         results.append({
-            'id':f'{i.ref}§{i.car}§{i.pr_achat}§{i.stock}§{i.id}§{i.remise}§{i.prnet}',
+            'id':f'{i.ref}§{i.car}§{i.pr_achat}§{stock}§{i.id}§{i.remise}§{i.prnet}',
             'text':f'{i.ref} - {i.car}'
         })
     return JsonResponse({'results': results})
@@ -2967,11 +3210,11 @@ def searchproduct(request):
 def getclientprice(request):
     clientid=request.GET.get('clientid')
     productid=request.GET.get('productid')
-    clientprice=Clientprice.objects.filter(client_id=clientid, product_id=productid).first()
+    clientprice=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=productid).order_by('-invoice__datebon').first()
     if clientprice:
         return JsonResponse({
             'price':clientprice.price,
-            'qty':clientprice.qty
+            'qty':clientprice.quantity
         })
     else:
         return JsonResponse({
@@ -3008,10 +3251,12 @@ def searchsupplier(request):
 def sorticontoir(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.cancreatecomptoir:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     ctx={
         'title':'Bon Sortie comptoir',
         'present_date': timezone.now().date(),
@@ -3119,9 +3364,10 @@ def createavoircomptoir(request):
 
 def getproductdata(request):
     id=request.GET.get('id')
+    facture=request.GET.get('facture')=='1'
     product=Product.objects.get(pk=id)
     return JsonResponse({
-        'stock':float(product.stock),
+        'stock':float(product.stockfacture) if facture else float(product.stock),
         'price':product.pr_achat,
         'prnet':product.prnet
     })
@@ -3163,10 +3409,12 @@ def updatestock(request):
 def users(request):
     userprofile=UserProfile.objects.get(user=request.user)
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     if not request.user.retailer_user.role_type=='owner':
         if not userprofile.canseeusers:
-            return render(request, 'products/nopermission.html')
+            # return render(request, 'products/nopermission.html')
+            pass
     ctx={
         'users':User.objects.all().exclude(pk=request.user.id),
         'userprofile':UserProfile.objects.get(user=request.user),
@@ -3207,7 +3455,8 @@ def updatepermission(request):
     })
 def zakat(request):
     if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
+        # return render(request, 'products/nopermission.html')
+        pass
     totalpdcts = round(Product.objects.filter(stock__gt=0).aggregate(
         total_price=ExpressionWrapper(
             Sum(F('stock') * F('prnet')),
@@ -3278,15 +3527,29 @@ def modifierboncomptoir(request, id):
     }
     return render(request, 'products/updatesorticontoir.html', ctx)
 
-def echeances(request):
+def echeancesupp(request):
     echeances=PaymentSupplier.objects.filter(Q(mode="echeanceEspece")|Q(mode="effet")| Q(mode="cheque")).order_by("echeance")
+    totalamount=round(echeances.aggregate(Sum('amount'))['amount__sum'] or 0, 2)
+    today=date.today()
+    tomorrow=today+timedelta(days=3)
+    ctx={
+        'tomorrow':tomorrow,
+        'today':today,
+        'title':'Echeances Fournisseur',
+        'echeances':echeances,
+        'totalamount':totalamount
+    }
+    return render(request, 'products/echeances.html', ctx)
+
+def echeanceclient(request):
+    echeances=PaymentClient.objects.filter(Q(mode="effet")| Q(mode="cheque")).order_by("echeance")
     totalamount=round(echeances.aggregate(Sum('amount'))['amount__sum'] or 0, 2)
     today=date.today()
     tomorrow=today+timedelta(days=1)
     ctx={
         'tomorrow':tomorrow,
         'today':today,
-        'title':'Echeances',
+        'title':'Echeances client',
         'echeances':echeances,
         'totalamount':totalamount
     }
@@ -3303,6 +3566,20 @@ def makeecheancepaid(request):
         amount=echeance.amount,
         raison=f'Paiement effet {echeance.npiece} - {echeance.supplier.name}'
     )
+    echeance.ispaid=True
+    echeance.save()
+    return JsonResponse({
+        'success':True
+    })
+
+def makeecheanceclientpaid(request):
+    id=request.GET.get('id')
+    echeance=PaymentClient.objects.get(pk=id)
+    # substract amount from bank
+    request.user.retailer_user.retailer.bank=float(request.user.retailer_user.retailer.bank)+float(echeance.amount)
+    request.user.retailer_user.retailer.save()
+    # create an outbank
+    
     echeance.ispaid=True
     echeance.save()
     return JsonResponse({
@@ -3586,13 +3863,37 @@ def bonprint(request, id):
     orderitems=list(orderitems)
     orderitems=[orderitems[i:i+37] for i in range(0, len(orderitems), 37)]
     tva=round(float(order.grand_total)-(float(order.grand_total)/1.2), 2)
+    payments=round(PaymentClient.objects.filter(bon=order).aggregate(Sum('amount')).get('amount__sum') or 0, 2)
+    #text neartotalweather it's avance or paid
+    text=''
+    if payments > 0:
+        if payments < order.grand_total:
+            text=f'(Avance de {payments})'
+        else:
+            text='(Payé)'
+    customer=order.customer
+    total_transactions = SalesHistory.objects.filter(customer=customer).aggregate(Sum('grand_total'))
+    total_transactions = float(total_transactions.get('grand_total__sum') or 0)
+    total_payments = PaymentClient.objects.filter(client=customer).aggregate(Sum('amount'))
+    total_payments = float(total_payments.get('amount__sum') or 0)
+    total_avoirs = Avoir.objects.filter(customer=customer).aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    clientpayments=PaymentClient.objects.filter(client=customer)
+    bons = SalesHistory.objects.filter(customer=customer)
+    paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
+    avoirs = Avoir.objects.filter(customer=customer)
+    payments=PaymentClient.objects.filter(client=customer)
+    totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    totalcredit=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
+    sold=float(totalbons)-float(totalcredit)
     ctx={
+        'text':text,
         'title':f'bon {order.receipt_no}',
         'facture':order,
         'orderitems':orderitems,
         'tva':tva,
         'ttc':order.grand_total,
         'ht':round(float(order.grand_total)-tva, 2),
+        'sold':sold
     }
     return render(request, 'products/bonprint.html', ctx)
 
@@ -3775,14 +4076,7 @@ def createfacturemanual(request):
         'success':True
         })
 
-def listfactures(request):
-    print('>>', SalesHistory.objects.filter(Q(ismanual=True) | Q(isfacture=True)))
-    ctx={
-        'title':'List factures',
-        'bons':SalesHistory.objects.filter(Q(ismanual=True) | Q(isfacture=True))
-    }
 
-    return render(request, 'products/listfactures.html', ctx)
 def barcodescan(request):
     return render(request, 'products/barcodescan.html')
 
@@ -3855,75 +4149,65 @@ def initpage(request):
         Category.objects.create(name='Produits')
     retailer=Retailer.objects.filter(pk=1).first()
     adminuser=User.objects.filter(pk=2).first()
+    posuser=User.objects.filter(pk=3).first()
     categories=Category.objects.filter(children__isnull=True).order_by('name')
-    print('ad', adminuser)
-    return render(request, 'initpage.html', {'categories':categories, 'retailer':retailer, 'retialerexist':Retailer.objects.exists(), 'adminuser':adminuser})
+    return render(request, 'initpage.html', {'categories':categories, 'retailer':retailer, 'retialerexist':Retailer.objects.exists(), 'adminuser':adminuser, 'posuser':posuser})
 
 def dvispage(request):
-    if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
     return render(request, 'products/dvispage.html', {"title":"Creer un Devis"})
 
 
-def listdevis(request):
-    if not request.user.retailer_user.retailer.working:
-        return render(request, 'products/nopermission.html')
-    devis=SalesHistory.objects.filter(isdevis=True)
-    ctx={
-        'title':'Liste des devis',
-        'bons':devis
-    }
-    return render(request, 'products/listdevis.html', ctx)
-
 @csrf_exempt
 def createdevise(request):
-    datebon=request.POST.get('datebon')
+    datebon=request.POST.get('date')
+    print('>>>>>', datebon)
     datebon=datetime.strptime(datebon, '%Y-%m-%d')
     total=request.POST.get('total')
+    customer=request.POST.get('customer')
     items=json.loads(request.POST.get('items'))
-    retailer=request.user.retailer_user.retailer
+    print('>>>>>', datebon)
     #create invoice
-    invoice=SalesHistory.objects.create(isdevis=True, retailer=retailer, grand_total=total, datebon=datebon)
+    year=timezone.now().strftime("%y")
+    latest_devis = Devis.objects.filter(
+        devis_no__startswith=f'DV{year}'
+    ).last()
+    # latest_devis = Bonsortie.objects.filter(
+    #     devis_no__startswith=f'BL{year}'
+    # ).order_by("-bon_no").first()
+    if latest_devis:
+        latest_devis_no = int(latest_devis.devis_no[-9:])
+        devis_no = f"DV{year}{latest_devis_no + 1:09}"
+    else:
+        devis_no = f"DV{year}000000001"
+    devis=Devis.objects.create(total=total, date=datebon, client_id=customer, devis_no=devis_no)
     # add total to caisse
     #create outproducts
     # todo: when contoir, we dont need to reduse qty from stock, it(s already done)
-    purchased_items_id = []
     with transaction.atomic():
         for item in items:
-            product = Product.objects.get(
-                pk=item.get('item_id'),
-            )
-            # product.stock=float(product.stock)-float(item.get('qty'))
-            # product.save()
-            purchased=PurchasedProduct.objects.create(
-                product=product,
-                quantity=item.get('qty'),
+            
+            Devisitems.objects.create(
+                qty=item.get('qty'),
+                product_id=item.get('item_id'),
                 price=item.get('price'),
-                purchase_amount=item.get('total'),
-                invoice=invoice
-
-
+                total=item.get('total'),
+                devis=devis
             )
-            purchased_items_id.append(purchased.id)
-    invoice.purchased_items.set(purchased_items_id)
     return JsonResponse({
         'success':True
     })
 
 def devisprint(request, id):
-    order=SalesHistory.objects.get(pk=id)
-    orderitems=PurchasedProduct.objects.filter(invoice=order)
+    order=Devis.objects.get(pk=id)
+    orderitems=Devisitems.objects.filter(devis=order)
     # split the orderitems into chunks of 10 items
     orderitems=list(orderitems)
     orderitems=[orderitems[i:i+33] for i in range(0, len(orderitems), 33)]
-    tva=round(float(order.grand_total)-(float(order.grand_total)/1.2), 2)
+    
     ctx={
-        'title':f'Devis {order.receipt_no}',
-        'facture':order,
+        'title':f'Devis {order.devis_no}',
+        'devis':order,
         'orderitems':orderitems,
-        'tva':tva,
-        'ttc':order.grand_total,
-        'ht':round(float(order.grand_total)-tva, 2),
     }
     return render(request, 'products/devisprint.html', ctx)
 
@@ -3933,18 +4217,27 @@ def devisprint(request, id):
 #                 <input type="text" class="form-control mb-2" name="ice" placeholder="ICE" >
 def adjustcompanyinfo(request):
     name=request.POST.get('name')
+    logo=request.FILES.get('logo')
+    print('>> logo', logo)
     address=request.POST.get('address')
     phone=request.POST.get('phone')
     ice=request.POST.get('ice')
-    Retailer.objects.update_or_create(
+    id_fiscal=request.POST.get('id_fiscal')
+    pt=request.POST.get('pt')
+    r, created=Retailer.objects.update_or_create(
         pk=1,
         defaults={
             'name': name,
             'address': address,
             'phone': phone,
-            'ice': ice
+            'ice': ice,
+            'id_fiscal':id_fiscal,
+            'pt':pt,
         }
     )
+    if logo:
+        r.logo=logo
+        r.save()
     return redirect('product:initpage')
 
 def addadmin(request):
@@ -3956,14 +4249,33 @@ def addadmin(request):
     # add user
     adminuser=User.objects.filter(pk=2).first()
     if adminuser:
-        print('updating')
+        print('updating', username, password)
         adminuser.username=username
-        adminuser.password=password
+        adminuser.set_password(password)
         adminuser.save()
     else:
 
         user=User.objects.create_user(username=username, password=password)
         RetailerUser.objects.create(user=user, retailer=Retailer.objects.get(pk=1))
+    return redirect('product:initpage')
+
+def addposuser(request):
+    username=request.POST.get('username')
+    password=request.POST.get('password')
+    # check if retailer is created
+    if not Retailer.objects.exists():
+        return redirect('product:initpage')
+    # add user
+    posuser=User.objects.filter(pk=3).first()
+    if posuser:
+        print('updating')
+        posuser.username=username
+        posuser.set_password(password)
+        posuser.save()
+    else:
+
+        user=User.objects.create_user(username=username, password=password)
+        RetailerUser.objects.create(user=user, retailer=Retailer.objects.get(pk=1), role_type="pos")
     return redirect('product:initpage')
 
 def notworking(request):
@@ -3973,3 +4285,438 @@ def notworking(request):
     return JsonResponse({
         'rr':'rr'
     })
+
+
+def getpdctins(request):
+
+    ref=request.GET.get('ref').lower().strip()
+    product=Product.objects.filter(ref=ref).first()
+    # avoirs
+    pdctins = StockIn.objects.filter(product=product)
+
+    total=round(pdctins.aggregate(Sum('total'))['total__sum'] or 0, 2)
+    totalqty=pdctins.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    return JsonResponse({
+        'success':True,
+        'pdctins': list(pdctins.values()),
+        'totalqtyin':totalqty,
+        'total':total
+    })
+
+# this is used in pdct rapports, it gives the outs of the product
+def getpdctouts(request):
+    ref=request.GET.get('ref').lower().strip()
+    product=Product.objects.filter(ref=ref).first()
+    pdctouts=PurchasedProduct.objects.filter(product=product, isavoirsupp=False)
+    avoirs=Returned.objects.filter(product=product)
+
+    totalqtyavoirs=avoirs.aggregate(Sum('qty'))['qty__sum'] or 0
+    totalavoirs=avoirs.aggregate(Sum('total'))['total__sum'] or 0
+    
+    print('>>pdctins', pdctouts)
+    grouped_by_month = groupby(pdctouts, key=lambda item: item.invoice.datebon.strftime('%m/%Y') if item.invoice else item.avoirsupp.date.strftime('%m/%Y'))
+    # if avoir supp will be included
+    # grouped_by_month = groupby(pdctouts, key=lambda item: item.invoice.datebon.strftime('%m/%Y') if item.invoice else item.avoirsupp.date.strftime('%m/%Y'))
+    # Prepare data for frontend
+    by_month = []
+    for month, items in grouped_by_month:
+        items=[i.quantity for i in items]
+        count = sum(items)  # Counting items in each group
+        by_month.append({'month': month, 'count': count})
+    
+    totalqty=pdctouts.aggregate(Sum('quantity'))['quantity__sum'] or 0
+    total=round(pdctouts.aggregate(Sum('purchase_amount'))['purchase_amount__sum'] or 0, 2)
+    # Group by client
+
+    client_quantities= defaultdict(int)
+    client_avoirs= defaultdict(int)
+    for i in avoirs:
+        client_name = i.avoir.customer.customer_name if i.avoir.customer else 'comptoir'
+        client_avoirs[client_name] += i.qty
+    for item in pdctouts:
+        client_name = item.invoice.customer.customer_name if item.invoice.customer else 'comptoir'
+        client_id = item.invoice.customer.id if item.invoice.customer else 'comptoir'
+        client_quantities[client_name] += item.quantity
+        #client_quantities[client_name][1] = Returned.objects.filter(avoir__client_id=client_id, product=product).aggregate(Sum('qty'))['qty__sum'] or 0
+        #client_data[client_name]['quantity'] += item[0].qty
+    avoirsupp=PurchasedProduct.objects.filter(product=product, isavoirsupp=True).aggregate(Sum('quantity'))['quantity__sum'] or 0
+    print('>>>>>> client_quantities', client_avoirs)
+    clients_quantities_serializable = sorted([
+    {'client': client, 'quantity': quantity}
+    for client, quantity in client_quantities.items()
+    ], key=lambda x: x['quantity'], reverse=True)[:10]
+    clients_avoirs_serializable = sorted([
+    {'client': client, 'quantity': quantity}
+    for client, quantity in client_avoirs.items()
+    ], key=lambda x: x['quantity'], reverse=True)
+    return JsonResponse({
+        'avoirsupp':avoirsupp,
+        'pdctstock':product.stock,
+        'pdctimg':product.image.url if product.image else '--',
+        'pdctname':product.name,
+        'success':True,
+        'totalavoirs':totalavoirs,
+        'pdctouts':list(pdctouts.values()),
+        'totalqtyout':totalqty,
+        'totalqtyavoirs':totalqtyavoirs,
+        'totalout':total,
+        'outbymonth':by_month,
+        'clientsqty':clients_quantities_serializable,
+        'clientsavoirs':clients_avoirs_serializable
+    })
+
+def addpaymentbon(request):
+    amount=request.GET.get('amount')
+    mode=request.GET.get('mode')
+    npiece=request.GET.get('npiece')
+    echeance=request.GET.get('echeance') or None
+    bonid=request.GET.get('bonid')
+    bon=SalesHistory.objects.get(pk=bonid)
+    client=bon.customer
+    if client:
+        client.rest=float(client.rest)-float(amount)
+        client.save()
+    
+    bon.paid_amount=float(bon.paid_amount)+float(amount)
+    bon.save()
+    pay=PaymentClient.objects.create(
+        client=client,
+        amount=float(amount),
+        mode=mode,
+        npiece=npiece,
+        bon=bon,
+        date=timezone.now()
+    )
+    if echeance:
+        pay.echeance=echeance
+        pay.save()
+    return JsonResponse({
+        'success':True
+        })
+
+def addpaymentfacture(request):
+    amount=request.GET.get('amount')
+    mode=request.GET.get('mode')
+    npiece=request.GET.get('npiece')
+    echeance=request.GET.get('echeance') or None
+    factureid=request.GET.get('factureid')
+    facture=Facture.objects.get(pk=factureid)
+    client=facture.client
+    # use total pâid to update the status of facture
+    totalpaid=float(facture.paid_amount)+float(amount)
+    facture.paid_amount=totalpaid
+    if totalpaid==float(facture.total):
+        facture.ispaid=True
+    facture.save()
+    pay=PaymentClient.objects.create(
+        isfacture=True,
+        client=client,
+        amount=float(amount),
+        mode=mode,
+        npiece=npiece,
+        facture=facture,
+        date=timezone.now().date()
+    )
+    if echeance:
+        pay.echeance=echeance
+        pay.save()
+    return JsonResponse({
+        'success':True
+        })
+
+
+def deviview(request):
+    
+    ctx={
+        "title":"Creer un Devis",
+        "customers":Customer.objects.all()
+    }
+    return render(request, 'products/deviview.html', ctx)
+def factureview(request):
+    year=timezone.now().strftime("%y")
+    latest_receipt = Facture.objects.filter(
+        facture_no__startswith=f'FC{year}'
+    ).last()
+    # latest_receipt = Bonsortie.objects.filter(
+    #     facture_no__startswith=f'BL{year}'
+    # ).order_by("-bon_no").first()
+    if latest_receipt:
+        latest_receipt_no = int(latest_receipt.facture_no[-9:])
+        receipt_no = f"FC{year}{latest_receipt_no + 1:09}"
+    else:
+        receipt_no = f"FC{year}000000001"
+    ctx={
+        "title":"Creer une Facture",
+        "customers":Customer.objects.all(),
+        'facturenumber':receipt_no
+    }
+    return render(request, 'products/factureview.html', ctx)
+
+def avoirview(request):
+    year=timezone.now().strftime("%y")
+    latest_receipt = avoir.objects.filter(
+        avoir_no__startswith=f'FC{year}'
+    ).last()
+    # latest_receipt = Bonsortie.objects.filter(
+    #     avoir_no__startswith=f'BL{year}'
+    # ).order_by("-bon_no").first()
+    if latest_receipt:
+        latest_receipt_no = int(latest_receipt.avoir_no[-9:])
+        receipt_no = f"FC{year}{latest_receipt_no + 1:09}"
+    else:
+        receipt_no = f"FC{year}000000001"
+    ctx={
+        "title":"Creer une avoir",
+        "customers":Customer.objects.all(),
+        'avoirnumber':receipt_no
+    }
+    return render(request, 'products/factureview.html', ctx)
+
+def listfactures(request):
+    factures=Facture.objects.all()
+    print('>> listfactures')
+
+    ctx={
+        'title':'Liste des factures',
+        'bons':factures
+    }
+    return render(request, 'products/listfactures.html', ctx)
+
+def createfacture(request):
+    year=timezone.now().strftime("%y")
+    latest_receipt = Facture.objects.filter(
+        facture_no__startswith=f'FC{year}'
+    ).last()
+    # latest_receipt = Bonsortie.objects.filter(
+    #     facture_no__startswith=f'BL{year}'
+    # ).order_by("-bon_no").first()
+    if latest_receipt:
+        latest_receipt_no = int(latest_receipt.facture_no[-9:])
+        receipt_no = f"FC{year}{latest_receipt_no + 1:09}"
+    else:
+        receipt_no = f"FC{year}000000001"
+    customer=Customer.objects.get(id=request.GET.get('customer_id'))
+    datebon=request.GET.get('datebon')
+    timebon=request.GET.get('timebon')
+    datetime_str = f"{datebon} {timebon}"
+    datebon = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+    print('>> datebon', datebon)
+    # make it datetime object
+    # datebon=datetime.strptime(datebon, '%Y-%m-%d')
+    sub_total = request.GET.get('sub_total')
+    discount = request.GET.get('discount')
+    shipping = request.GET.get('shipping')
+    grand_total = request.GET.get('grand_total')
+    totalQty = request.GET.get('totalQty')
+    remaining_payment = request.GET.get('remaining_amount')
+    paid_amount = request.GET.get('paid_amount') or 0
+    cash_payment = request.GET.get('cash_payment')
+    returned_cash = request.GET.get('returned_cash')
+    items = json.loads(request.GET.get('items'))
+    tva=round(float(grand_total)-(float(grand_total)/1.2), 2)
+    with transaction.atomic():
+        facture=Facture.objects.create(
+            date=datebon,
+            total=grand_total,
+            facture_no=receipt_no,
+            tva=tva,
+            client=customer
+        )
+        for item in items:
+            # add client price:
+            product=Product.objects.get(pk=item.get('item_id'))
+            product.stockfacture-=float(item.get('qty'))
+            product.save()
+            Outfacture.objects.create(
+                facture=facture,
+                product=product,
+                total=item.get('total'),
+                qty=item.get('qty'),
+                price=item.get('price'),
+                date=datebon,
+                client=customer
+            )
+    return JsonResponse({
+        'success':True
+    })
+
+def loadmorebons(request):
+    page = int(request.GET.get('page', 1))
+    per_page = 50
+    start = (page - 1) * per_page
+    end = page * per_page
+    bons=SalesHistory.objects.order_by('-id')[start:end]
+    print('bons', bons)
+    return JsonResponse({
+        'data':render(request, 'products/bonlist.html', {'bons':bons}).content.decode('utf-8'),
+        'hasmore': len(bons) == per_page
+    })
+def factureprint(request):
+    id=request.GET.get('id')
+    order=Facture.objects.get(pk=id)
+    orderitems=Outfacture.objects.filter(facture=order)
+    orderitems=[orderitems[i:i+37] for i in range(0, len(orderitems), 37)]
+    tva=round(float(order.total)-(float(order.total)/1.2), 2)
+    payments=round(PaymentClient.objects.filter(facture=order).aggregate(Sum('amount')).get('amount__sum') or 0, 2)
+    #text neartotalweather it's avance or paid
+    text=''
+    if payments > 0:
+        if payments < order.total:
+            text=f'(Avance de {payments})'
+        else:
+            text='(Payé)'
+    customer=order.client
+    total_transactions = SalesHistory.objects.filter(customer=customer).aggregate(Sum('grand_total'))
+    total_transactions = float(total_transactions.get('grand_total__sum') or 0)
+    total_payments = PaymentClient.objects.filter(client=customer).aggregate(Sum('amount'))
+    total_payments = float(total_payments.get('amount__sum') or 0)
+    total_avoirs = Avoir.objects.filter(customer=customer).aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    clientpayments=PaymentClient.objects.filter(client=customer)
+    bons = SalesHistory.objects.filter(customer=customer)
+    paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
+    avoirs = Avoir.objects.filter(customer=customer)
+    payments=PaymentClient.objects.filter(client=customer)
+    totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    totalcredit=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
+    sold=float(totalbons)-float(totalcredit)
+    ctx={
+        'text':text,
+        'title':f'bon {order.facture_no}',
+        'facture':order,
+        'orderitems':orderitems,
+        'tva':tva,
+        'ttc':order.total,
+        'ht':round(float(order.total)-tva, 2),
+        'sold':sold
+    }
+    return render(request, 'products/factureprint.html', ctx)
+
+def facturation(request):
+    return render(request, 'products/facturation.html', {
+        'title':'Facturation',
+    })
+
+def deviseview(request):
+    today=date.today()
+    ctx={
+        'title':'+Devis',
+        'today':today,
+        'customers':Customer.objects.all()
+    }
+    return render(request, 'products/createdevise.html', ctx)
+def modifierdevi(request):
+    devi=Devis.objects.get(pk=request.GET.get('id'))
+    items=Devisitems.objects.filter(devise=devi)
+    ctx={
+        'devi':devi,
+        'items':items,
+        'customers':Customer.objects.all(),
+        'title':f'Modifier Devi N° {devi.Devis_no}'
+    }
+    return render(request, 'products/modifierdevi.html', ctx)
+
+def deletedevi(request):
+    devi=Devis.objects.get(pk=request.GET.get('id'))
+    items=Devisitems.objects.filter(devise=devi)
+    devi.delete()
+    items.delete()
+    return redirect('product:listdevises')
+
+def updatedevi(request):
+    datebon=request.POST.get('date')
+    datebon=datetime.strptime(datebon, '%Y-%m-%d')
+    total=request.POST.get('total')
+    deviid=request.POST.get('deviid')
+    devi=Devis.objects.get(pk=deviid)
+    customer=request.POST.get('customer')
+    items=json.loads(request.POST.get('items'))
+    print('>>>>>', datebon)
+    #create invoice
+    devi.total=total
+    devi.date=datebon
+    devi.client_id=customer
+    devi.save()
+    print(devi, devi.id)
+    #delete old items
+    olditems=Devisitems.objects.filter(devise=devi)
+    olditems.delete()
+    # add total to caisse
+    #create outproducts
+    # todo: when contoir, we dont need to reduse qty from stock, it(s already done)
+    with transaction.atomic():
+        for item in items:
+            Devisitems.objects.create(
+                qty=item.get('qty'),
+                article=item.get('article'),
+                price=item.get('price'),
+                total=item.get('total'),
+                devise=devi
+            )
+    return JsonResponse({
+        'success':True
+    })
+
+def devisedetails(request, id):
+    devise=Devis.objects.get(pk=id)
+    items=Devisitems.objects.filter(devise=devise)
+    ctx={
+        'devise':devise,
+        'items':items
+    }
+    return render(request, 'products/devisedetails.html', ctx)
+
+def genererdevistobonpage(request):
+    id=request.GET.get('id')
+    devis=Devis.objects.get(pk=id)
+    items=Devisitems.objects.filter(devis=devis)
+    return render(request, 'products/genererdevistobonpage.html', {
+        'devis':devis,
+        'items':items,
+        'customers':Customer.objects.all()
+    })
+
+def soldclient(request):
+    id=request.GET.get('id')
+    bons = SalesHistory.objects.filter(customer_id=id)
+    avoirs = Avoir.objects.filter(customer_id=id)
+    payments=PaymentClient.objects.filter(client_id=id)
+    totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+    totalcredit=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
+    sold=float(totalbons)-float(totalcredit)
+
+    return JsonResponse({
+        'sold':sold
+    })
+
+def searchclient(request):
+    term=request.GET.get('term')
+    #regex_search_term = term.replace('+', '*')
+
+    
+    
+    # Perform the query with the combined Q object and conditional filter parameters
+    clients = Customer.objects.filter(customer_name__icontains=term)
+
+    # if '+' in term:
+    #     term=term.split('+')
+    #     for i in term:
+    #         clients=Client.objects.filter(
+    #             Q(name__icontains=i) |
+    #             Q(code__icontains=i) |
+    #             Q(region__icontains=i) |
+    #             Q(city__icontains=i)
+    #         )
+    # else:
+    #     clients=Client.objects.filter(
+    #         Q(name__icontains=term) |
+    #         Q(code__icontains=term) |
+    #         Q(region__icontains=term) |
+    #         Q(city__icontains=term)
+    #     )
+    results=[]
+    for i in clients:
+        results.append({
+            'id':i.id,
+            'text':f'{i.customer_name} - {i.customer_phone}',
+        })
+    return JsonResponse({'results': results})

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from django.db import models
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 import random
 from django.db.models.signals import post_save
 import json
@@ -44,6 +44,19 @@ class Supplier(models.Model):
     client=models.ForeignKey(Customer, related_name="clientofsupplier", on_delete=models.CASCADE, default=None, blank=True, null=True)
     def __str__(self) -> str:
         return self.name
+    def totalstock(self):
+        return Product.objects.filter(
+            stock__gt=0, originsupp=self
+        ).aggregate(total_value=Sum(F('prnet') * F('stock')))['total_value'] or 0
+    def sold(self):
+        avoirs=Avoirsupp.objects.filter(supplier=self)
+        reglementsbl=PaymentSupplier.objects.filter(supplier=self)
+        bons=Itemsbysupplier.objects.filter(supplier=self)
+        totalbons=bons.aggregate(total=Sum('total'))['total'] or 0
+        totalregl=reglementsbl.aggregate(total=Sum('amount'))['total'] or 0
+        totalavoirs=avoirs.aggregate(total=Sum('total'))['total'] or 0
+        totalreglandavoirs=round(totalavoirs+totalregl, 2)
+        return round(totalbons-totalreglandavoirs, 2)
 
 class Avoirsupp(models.Model):
     supplier=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None)
@@ -85,7 +98,11 @@ class PaymentSupplier(models.Model):
     note=models.CharField(max_length=1000, default=None, null=True, blank=True)
 
 
+
 class PaymentClient(models.Model):
+    isfacture=models.BooleanField(default=False)
+    ispaid=models.BooleanField(default=False)
+    facture=models.ForeignKey('Facture', on_delete=models.CASCADE, default=None, null=True, blank=True)
     client=models.ForeignKey(Customer, on_delete=models.CASCADE, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     date = models.DateTimeField(default=timezone.now)
@@ -95,6 +112,19 @@ class PaymentClient(models.Model):
     echeance=models.DateField(default=None, null=True)
     note=models.CharField(max_length=1000, default=None, null=True, blank=True)
     bons=models.ManyToManyField('pis_sales.SalesHistory', default=None, blank=True, related_name="bons_reglements")
+    bon=models.ForeignKey('pis_sales.SalesHistory', on_delete=models.CASCADE, blank=True, null=True, default=None, related_name="bonofreglements")
+    @classmethod
+    def totalclientbl(cls, customer):
+        return cls.objects.filter(client=customer, isfacture=False).aggregate(
+            total_bon_sum=Sum('amount')
+        )['total_bon_sum'] or 0  # Return 0 if no bons exist
+    @classmethod
+    def totalclientfc(cls, customer):
+        return cls.objects.filter(client=customer, isfacture=True).aggregate(
+            total_bon_sum=Sum('amount')
+        )['total_bon_sum'] or 0  # Return 0 if no bons exist
+
+
 # this acts as a bon achat
 class Itemsbysupplier(models.Model):
     supplier= models.ForeignKey(Supplier, related_name='supplier',on_delete=models.CASCADE, default=None)
@@ -105,6 +135,11 @@ class Itemsbysupplier(models.Model):
     #date in bon
     bondate = models.DateTimeField(blank=True, null=True, default=None)
     rest= models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
+    isfacture=models.BooleanField(default=False)
+    def tva(self):
+        return float(self.total)-round(float(self.total)/1.2, 2)
+    def ht(self):
+        return round(float(self.total)/1.2, 2)
 # items of bon achat
 
 
@@ -140,35 +175,39 @@ class Product(models.Model):
     name = models.CharField(max_length=5000)
     ref = models.CharField(max_length=5000, default=None, null=True, blank=True)
     brand_name = models.CharField(max_length=200, blank=True, null=True)
+    stockfacture=models.FloatField(default=0.00)
     retailer = models.ForeignKey(
         'pis_retailer.Retailer',
         related_name='retailer_product',on_delete=models.CASCADE, default=None
     )
-    pr_achat=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    pr_achat=models.FloatField(default=0.00, null=True)
     # pr magazin
-    price=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    price=models.FloatField(default=0.00, null=True)
+    # prix vente client
+    price1=models.FloatField(default=0.00, null=True)
+    # prix vente client 2
+    price2=models.FloatField(default=0.00, null=True)
     #prix vente gro
     prvente=models.FloatField(default=0.00, null=True)
     pondire=models.FloatField(default=0.00, null=True)
     remise=models.IntegerField(default=0)
-    prnet=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    prnet=models.FloatField(default=0.00, null=True)
     prices = models.TextField(default='[]')
     command=models.BooleanField(default=False)
     rcommand=models.BooleanField(default=False)
     commanded=models.BooleanField(default=False)
-    qtycommand=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    qtycommand=models.FloatField(default=0.00)
     disponibleinother=models.BooleanField(default=False)
     # this is the supplier of the commande
     supplier=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="command_supplier")
     originsupp=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="original_supplier")
     mark=models.ForeignKey(Mark, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="product_mark")
-    stock=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    minstock=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    stock=models.FloatField(default=0.00)
+    minstock=models.FloatField(default=0.00)
     car = models.CharField(max_length=5000, blank=True, null=True, default=None)
-    bar_code = models.CharField(max_length=13, unique=True, blank=True, null=True)
+    bar_code = models.CharField(max_length=500, unique=True, blank=True, null=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    def __str__(self) -> str:
-        return self.ref
+    
     def getsimillars(self):
         originref=self.ref.split()[0]
         return Product.objects.exclude(id=self.id).filter(category=self.category).filter(ref__startswith=originref).exclude(stock=0)
@@ -177,47 +216,7 @@ class Product(models.Model):
     #     prices=json.loads(self.prices)
     #     filtered_prices = [item for item in prices[1:] if float(item[1]) != 0]
     #     return filtered_prices
-    def __unicode__(self):
-        return self.name
-
-    def total_items(self):
-        try:
-            obj_stock_in = self.stockin_product.aggregate(Sum('quantity'))
-            stock_in = float(obj_stock_in.get('quantity__sum'))
-        except:
-            stock_in = 0
-
-        return stock_in
-
-    def product_available_items(self):
-        try:
-            obj_stock_in = self.stockin_product.aggregate(Sum('quantity'))
-            stock_in = float(obj_stock_in.get('quantity__sum'))
-        except:
-            stock_in = 0
-
-        try:
-            obj_stock_out = self.purchased_product.aggregate(Sum('quantity'))
-            stock_out = float(obj_stock_out.get('quantity__sum'))
-        except:
-            stock_out = 0
-        return  (stock_in - stock_out)
-
-    def product_purchased_items(self):
-        try:
-            obj_stock_out = self.stockout_product.aggregate(
-                Sum('stock_out_quantity'))
-            stock_out = float(obj_stock_out.get('stock_out_quantity__sum'))
-        except:
-            stock_out = 0
-        return  stock_out
-
-    def total_num_of_claimed_items(self):
-        obj = self.claimed_product.aggregate(Sum('claimed_items'))
-        return obj.get('claimed_items__sum')
-
-
-
+    
 
 class Productscommand(models.Model):
     product = models.ForeignKey(
@@ -332,17 +331,13 @@ class PurchasedProduct(DatedModel):
     )
     isavoirsupp=models.BooleanField(default=False)
     avoirsupp=models.ForeignKey(Avoirsupp, related_name='avoirsupp', on_delete=models.CASCADE, default=None, null=True, blank=True)
-    quantity = models.DecimalField(
-        max_digits=65, decimal_places=2, default=1, blank=True, null=True
+    quantity = models.FloatField(default=1.00, blank=True, null=True
     )
-    price = models.DecimalField(
-        max_digits=65, decimal_places=2, default=0, blank=True, null=True
+    price = models.FloatField(default=0.00, blank=True, null=True
     )
-    discount_percentage = models.DecimalField(
-        max_digits=65, decimal_places=2, default=0, blank=True, null=True
+    discount_percentage = models.FloatField(default=0.00, blank=True, null=True
     )
-    purchase_amount = models.DecimalField(
-        max_digits=65, decimal_places=2, default=0, blank=True, null=True
+    purchase_amount = models.FloatField(default=0.00, blank=True, null=True
     )
 
 
@@ -431,3 +426,79 @@ class Supplierprice(models.Model):
     price=models.FloatField(default=0.00, blank=True, null=True)
     qty=models.IntegerField(default=0, blank=True, null=True)
     remise=models.IntegerField(default=0, blank=True, null=True)
+class Devis(models.Model):
+    client=models.ForeignKey(
+        'pis_com.Customer', related_name='clientdevis',
+        null=True, blank=True,on_delete=models.SET_NULL
+    )
+    date=models.DateField()
+    total=models.FloatField(default=0.00, null=True)
+    devis_no=models.CharField(max_length=100)
+    isgenerated=models.BooleanField(default=False)
+
+class Devisitems(models.Model):
+    devis=models.ForeignKey(Devis, on_delete=models.SET_NULL, null=True)
+    product=models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    qty=models.CharField(max_length=500)
+    price=models.CharField(max_length=500)
+    total=models.CharField(max_length=500)
+    
+class Facture(models.Model):
+    paid_amount=models.FloatField(default=0.00)
+    isvalid=models.BooleanField(default=False)
+    date = models.DateTimeField(blank=True, null=True)
+    code=models.CharField(max_length=50, null=True, default=None)
+    total=models.FloatField(default=0.00)
+    tva=models.FloatField(default=0.00)
+    rest=models.FloatField(default=0.00)
+    ispaid=models.BooleanField(default=False)
+    facture_no=models.CharField(max_length=50, null=True, default=None)
+    client=models.ForeignKey(Customer, on_delete=models.SET_NULL, default=None, null=True)
+    # notes of fc
+    # printed indicates that this facture was received by the client
+    printed = models.BooleanField(default=False)
+    note=models.TextField(default=None, null=True, blank=True)
+    # true if facture is accounting
+    isaccount=models.BooleanField(default=False)
+    statusreg=models.CharField(max_length=50, null=True, default='b1', blank=True)
+    # if we have more than one bon for the same facture
+    def ht(self):
+        return round(self.total/1.2, 2)
+    def thistva(self):
+        return round((self.total/1.2)*.2, 2)
+    def reglements(self):
+        return PaymentClient.objects.filter(factures__in=[self])
+    @classmethod
+    def totalclient(cls, customer):
+        return cls.objects.filter(client=customer).aggregate(
+            total_bon_sum=Sum('total')
+        )['total_bon_sum'] or 0  # Return 0 if no bons exist
+
+class Outfacture(models.Model):
+    facture=models.ForeignKey(Facture, on_delete=models.CASCADE, default=None)
+    total=models.FloatField(default=0.00)
+    product=models.ForeignKey(Product, on_delete=models.CASCADE, default=None, null=True)
+    remise=models.CharField(max_length=100, null=True, default=None)
+    ref=models.CharField(max_length=100, null=True, default=None)
+    name=models.CharField(max_length=100, null=True, default=None)
+    qty=models.IntegerField()
+    # this total represents the revenue of this product
+    price=models.FloatField(default=0.00)
+    client=models.ForeignKey(Customer, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    date=models.DateField(default=None, blank=True, null=True)
+    
+class Devise(models.Model):
+    client=models.ForeignKey(
+        'pis_com.Customer', related_name='clientdevise',
+        null=True, blank=True,on_delete=models.SET_NULL
+    )
+    date=models.DateField()
+    total=models.FloatField(default=0.00, null=True)
+    Devise_no=models.CharField(max_length=100)
+
+class Deviseitems(models.Model):
+    devise=models.ForeignKey(Devise, on_delete=models.SET_NULL, null=True)
+    article=models.CharField(max_length=500)
+    qty=models.CharField(max_length=500)
+    price=models.CharField(max_length=500)
+    total=models.CharField(max_length=500)

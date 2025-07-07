@@ -366,29 +366,29 @@
         }
         // add client
         // telephone obligatoir (avoid duolicate)
-        $('.addclientbtn').on('click', ()=>{
-            if($('.customer').val() == '' || $('.customer_phone').val()=='' || $('.customer_phone').val().length!=10){
-                console.log('error')
-                $('.customererror').show();
-                return false;
-            }else{
+        // $('.addclientbtn').on('click', ()=>{
+        //     if($('.customer').val() == '' || $('.customer_phone').val()=='' || $('.customer_phone').val().length!=10){
+        //         console.log('error')
+        //         $('.customererror').show();
+        //         return false;
+        //     }else{
 
-                $('.addclientbtn').addClass('disabled')
-                $.post(
-                    '{% url "product:addclient" %}',
-                    {
-                        'name':$('.customer').val(),
-                        'phone':$('.customer_phone').val(),
-                        'ice':$('.customer_ice').val(),
-                        'address':$('.customer_address').val(),
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    function(data){
-                        alertify.success('OK')
-                    }
-                )
-            }
-        })
+        //         $('.addclientbtn').addClass('disabled')
+        //         $.post(
+        //             '{% url "product:addclient" %}',
+        //             {
+        //                 'name':$('.customer').val(),
+        //                 'phone':$('.customer_phone').val(),
+        //                 'ice':$('.customer_ice').val(),
+        //                 'address':$('.customer_address').val(),
+        //                 'csrfmiddlewaretoken': '{{ csrf_token }}'
+        //             },
+        //             function(data){
+        //                 alertify.success('OK')
+        //             }
+        //         )
+        //     }
+        // })
 
         // var item_list = '<select id="all-items" class="form-select select2"><option value="0">Articles</option>';
         // // create select from pdct, its a registered
@@ -421,7 +421,7 @@
             
             
             
-            $('#create-invoice').live('click', function () {
+            $('#create-invoice').on('click', function () {
                 const allErrorDivsHaveDNone = $('.errorprice').toArray().every(function(div) {
                     return $(div).hasClass('d-none');
                 });

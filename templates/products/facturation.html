@@ -4,7 +4,6 @@
 
 
 <!-- for accountant -->
-{% if user.groups.all.0.name == 'account' %}
 <div class="row mb-5 p-2">
     <div class="col-6 row">
         <div class=" row">
@@ -62,132 +61,8 @@
         </strong>
     </div>
 </div>
-{% else %}
-<div class=" mb-5">
-
-    <div class="bg-white p-2 rounded mb-2">
-        <input type="text" class="form-control searchglobal" placeholder="Rechercher Global" autocomplete="off">
-    </div>
-    <!-- this was a quik search for items -->
-    <div class="rounded  position-relative">
-        <div class="loadertable justify-content-center align-items-center d-none" style="
-        position: absolute;
-        z-index: 9999;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: #0000007d;
-        ">
-            <div class="spinner-border text-white" role="status">
-
-            </div>
-        </div>
-
-        <div class="bg-white p-2 rounded">
-            <table class="mb-5 table table-bordered table-advance item-table">
-            <hr>
-            <thead>
-            <tr>
-                <th>Ref</th>
-                <th>Famille</th>
-                <th>Marque</th>
-                <th>Designation</th>
-                <th>Stock</th>
-                <th>Pondiré (NET)</th>
-                <th>Prix acht</th>
-                <th>Remise</th>
-                <th>P. vt gro</th>
-                <th>P. vt magazin</th>
-                <!-- <th style="width: 10%;">Sortie</th> -->
-            </tr>
-            </thead>
-            <tbody class="product-table-body text-center product_search_result">
-
-            </tbody>
-        </table>
-        </div>
-
-
-    </div>
-
-    <div class="row mt-3" style="font-size: 2em;">
-        <div class="col-3">
-            <div class="rounded shadow p-3 bg-white">
-                <div class="">
-                    <strong class="text-primary">
-                        Produits
-                    </strong>
-                    <br>
-                    <strong>
-                        {{totalproducts}}
-                    </strong>
-                    
-                </div>
-
-            </div>
-        </div>
-
-        <div class="col-3">
-            <div class="rounded shadow p-3 bg-white">
-                <div class="">
-                    <strong class="text-primary">
-                        Ventes de jour
-                    </strong>
-                    <div class="">
-                        <strong>
-                            {{today_sales_sum}}DH
-                        </strong>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="col-3">
-            <div class="rounded shadow p-3 bg-white">
-                <strong class="text-primary">
-                    Clients
-                </strong>
-                <div class="">
-                    <strong>
-                        {{totalclients}}
-                    </strong>
-                </div>
-                
-
-            </div>
-        </div>
-
-        <!-- <div class="col-3">
-            <div class="rounded shadow p-3 bg-white">
-                <strong class="text-primary">
-                    Bon non payé
-                </strong>
-                <br>
-                <strong>
-                    {{notpaid}}
-                </strong>
-                
-
-            </div>
-        </div> -->
-
-
-
-    </div>
-
-
-
-    <br>
-    <h1>
-        {{request.user.retailer.retailer_user}}
-    </h1>
-
-<!--col-div end here--->
-</div>
-{% endif %}
 <h1 style="text-align: center; font-size: 8em;" class="text-primary">
-    {{ request.user.retailer_user.retailer.name }} {% if user.groups.all.0.name == 'account' %} (Facturation){% endif %}
+    {{ request.user.retailer_user.retailer.name }}  (Facturation)
 </h1>
 
 {% endblock %}
@@ -308,7 +183,30 @@
                 })
             })
         }
-        
+        $('.searchglobal').on('change', function(){
+            $('.loadertable').removeClass('d-none')
+            if ($(this).val()==''){
+                $('.loadertable').addClass('d-none')
+                $('.product_search_result').html('')
+                return
+            }
+            else{
+                $.ajax({
+                    url: "/product/searchglobal",
+                    type: "POST",
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                        'global': $('.searchglobal').val(),
+                    },
+                    success: function (data) {
+                        $('.loadertable').addClass('d-none')
+                        $('.product_search_result').html(data.data)
+                        updatestock()
+                        displayimage()
+                    }
+                })
+            }
+        })
         function liveSearch() {
 
             if ($('.searchref').val()=='' && $('.searchcar').val()=='' && $('.searchcategory').val()==''){

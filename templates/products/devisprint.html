@@ -35,12 +35,12 @@
     <link href="/static/css/bootstrap.css" rel="stylesheet" />
 </head>
 <body>
-<div id="printfc{{facture.id}}" style="position:relative;">
+<div id="printfc{{devis.id}}" style="position:relative;">
 
   {% for i in orderitems %}
   {% if forloop.counter == orderitems|length %}
   <!-- last iteration -->
-  <div class="postion-relative px-5 facture{{facture.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
+  <div class="postion-relative px-5 facture{{devis.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
     <div class="border p-2 text-center">
       {{user.retailer_user.retailer.name}}
     </div>
@@ -50,11 +50,14 @@
         <div class="d-flex justify-content-between">
           <div>
             <div
-              >Devis N°: <strong>{{facture.receipt_no}}</strong>
+              >Devis N°: <strong>{{devis.devis_no}}</strong>
             </div>
             <div>
-              Date: <strong>{{facture.datebon|date:"d/m/Y"}}</strong>
+              Date: <strong>{{devis.date|date:"d/m/Y"}}</strong>
             </div>
+          </div>
+          <div>
+            Client: <strong>{{devis.client.customer_name.upper}}</strong>
           </div>
           
         </div>
@@ -93,7 +96,7 @@
                   </td>
                   <td class="text-center">
                     {% for v in i %}
-                    {{v.quantity}}
+                    {{v.qty}}
                     {% if not forloop.counter == i|length %}<br>{% endif %}
                     {% endfor %}
                   </td>
@@ -111,7 +114,7 @@
                   </td> -->
                   <td class="text-center">
                     {% for v in i %}
-                    {{v.purchase_amount|floatformat:2|intspace}}
+                    {{v.total|floatformat:2|intspace}}
                     {% if not forloop.counter == i|length %}<br>{% endif %}
                     {% endfor %}
                   </td>
@@ -136,17 +139,18 @@
           </td>
 
           <td>
-            <strong class="ttcgc{{facture.id}}" style="font-size: 15px">
-              {{ttc|floatformat:2|intspace}}
+            <strong class="ttcgc{{devis.id}}" style="font-size: 15px">
+              {{devis.total|floatformat:2|intspace}}
             </strong>
           </td>
         </tr>
       </table>
       
     </div>
+    {{user.retailer_user.retailer.name}} {{user.retailer_user.retailer.address}}<br>TEL: {{user.retailer_user.retailer.phone}} ICE: {{user.retailer_user.retailer.ice}} IF:{{user.retailer_user.retailer.id_fiscal}} TP:{{user.retailer_user.retailer.tp}}
   </div>
   {% else %}
-  <div class="postion-relative px-5 facture{{facture.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
+  <div class="postion-relative px-5 facture{{devis.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
 
     <div class="border p-2 text-center">
       {{user.retailer_user.retailer.name}}
@@ -156,19 +160,19 @@
         <div class="d-flex justify-content-between">
           <div>
             <div
-              >Facture N°: <strong>{{facture.receipt_no}}</strong>
+              >Facture N°: <strong>{{devis.devis_no}}</strong>
             </div>
             <div>
-              Date: <strong>{{facture.datebon|date:"d/m/Y"}}</strong>
+              Date: <strong>{{devis.date|date:"d/m/Y"}}</strong>
             </div>
           </div>
           <div>
             <div>
-              cleint: <strong>{{facture.customer.customer_name.upper}}</strong>
+              cleint: <strong>{{devis.customer.customer_name.upper}}</strong>
             </div>
             <div class="">
               ICE: <strong>
-                 {{facture.customer.ice}}
+                 {{devis.customer.ice}}
               </strong>
             </div>
 
@@ -209,7 +213,7 @@
             </td>
             <td class="text-center">
               {% for v in i %}
-              {{v.quantity}}
+              {{v.qty}}
               {% if not forloop.counter == i|length %}<br>{% endif %}
               {% endfor %}
             </td>
@@ -227,7 +231,7 @@
             </td> -->
             <td class="text-center">
               {% for v in i %}
-              {{v.purchase_amount|floatformat:2|intspace}}
+              {{v.total|floatformat:2|intspace}}
               {% if not forloop.counter == i|length %}<br>{% endif %}
               {% endfor %}
             </td>
@@ -241,9 +245,7 @@
 
     <div class="text-center" style="font-size:11px">
 
-      LOT ARGANA N° B25 - AIT MELLOUL <br>
-      IF: 15251205 - Patente: 49815086 - CNSS: 5921079 - ICE: 001667720000027 <br>
-      Fixe: +212 528 24 35 17 - Tel: 06 66 03 72 81
+      {{user.retailer_user.retailer.name}} {{user.retailer_user.retailer.address}}<br>TEL: {{user.retailer_user.retailer.phone}} ICE: {{user.retailer_user.retailer.ice}} IF:{{user.retailer_user.retailer.id_fiscal}} TP:{{user.retailer_user.retailer.tp}}
     </div>
 
   </div>
@@ -298,10 +300,10 @@
         return Number(integerPart).toFixed(2);
       }
   }
-    /*$('.ttcgc{{facture.id}}').text(separateThousands('{{facture.total|floatformat:2|intspace}}'))
-    $('.tvafc{{facture.id}}').text(separateThousands({{tva|floatformat:2|intspace}}))
-    $('.htfc{{facture.id}}').text(separateThousands({{ht|floatformat:2|intspace}}))*/
-     $('.totalfactureprint').text($.spellingNumber('{{facture.grand_total|floatformat:2}}', {
+    /*$('.ttcgc{{devis.id}}').text(separateThousands('{{devis.total|floatformat:2|intspace}}'))
+    $('.tvafc{{devis.id}}').text(separateThousands({{tva|floatformat:2|intspace}}))
+    $('.htfc{{devis.id}}').text(separateThousands({{ht|floatformat:2|intspace}}))*/
+     $('.totalfactureprint').text($.spellingNumber('{{devis.total|floatformat:2}}', {
       lang:'fr',
       wholesUnit:"Dirhams",
       fractionUnit:"Centimes",

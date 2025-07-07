@@ -41,16 +41,34 @@
   {% if forloop.counter == orderitems|length %}
   <!-- last iteration -->
   <div class="postion-relative px-5 facture{{facture.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
-    <div class="border p-2 text-center">
-      {{user.retailer_user.retailer.name}}
+    <div class="row border p-2 text-center">
+      <img class="col-3" src="{%if user.retailer_user.retailer.logo%}{{user.retailer_user.retailer.logo.url}}{%endif%}" style="width: 15%">
+      <!-- {{user.retailer_user.retailer.name}} -->
+      <div class="d-flex justify-content-between col-9">
+          <div>
+            <div
+              >Facture N°: <strong>{{facture.facture_no}}</strong>
+            </div>
+            <div>
+              Date: <strong>{{facture.date|date:"d/m/Y"}}</strong>
+            </div>
+          </div>
+          <div>
+            <div>
+              cleint: <strong>{{facture.client.customer_name.upper}} </strong>
+            </div>
+
+
+          </div>
+        </div>
     </div>
 
-    <!-- facture header -->
+    <!-- facture header 
     <div class="">
         <div class="d-flex justify-content-between">
           <div>
             <div
-              >Facture N°: <strong>{{facture.receipt_no}}</strong>
+              >Bon N°: <strong>{{facture.facture_no}}</strong>
             </div>
             <div>
               Date: <strong>{{facture.datebon|date:"d/m/Y"}}</strong>
@@ -58,19 +76,15 @@
           </div>
           <div>
             <div>
-              cleint: <strong>{{facture.customer.customer_name.upper}}</strong>
+              cleint: <strong>{{facture.client.customer_name.upper}} </strong>
             </div>
-            <div class="">
-              ICE: <strong>
-                 {{facture.customer.ice}}
-              </strong>
-            </div>
+
 
           </div>
         </div>
 
 
-    </div>
+    </div>-->
 
     <!-- facture items -->
     <div class="orderitems mt-3 bg-white rounded p-2 position-relative">
@@ -79,22 +93,22 @@
         <thead style="font-size: 10px;
         font-weight: 800;" class="text-center">
           <tr>
-            <!-- <td style="width: 19%;">Ref</td> -->
-            <td style="width: 35%;">Designation</td>
-            <td style="width: 9%;">Qté</td>
-            <td style="width: 14%;">P.U</td>
+            <td>Ref</td>
+            <td>Designation</td>
+            <td>Qté</td>
+            <td>P.U</td>
             <!-- <td style="width: 5%;">Rem</td> -->
-            <td style="width: 16%">Mantant</td>
+            <td>Mantant</td>
           </tr>
         </thead>
         <tbody>
                 <tr>
-                    <!-- <td style="height: 150mm;padding-left:3px">
+                    <td style="padding-left:3px">
                       {% for v in i %}
-                      {{v.product.ref.upper}} {{i.id}}
+                      {{v.product.ref.upper}}
                       {% if not forloop.counter == i|length %}<br>{% endif %}
                       {% endfor %}
-                    </td> -->
+                    </td>
                   <td style="height: 190mm;white-space: nowrap;padding-left:3px">
                       {% for v in i %}
                         {{v.product.car.upper|slice:"50"}}
@@ -103,7 +117,7 @@
                   </td>
                   <td class="text-center">
                     {% for v in i %}
-                    {{v.quantity}}
+                    {{v.qty}}
                     {% if not forloop.counter == i|length %}<br>{% endif %}
                     {% endfor %}
                   </td>
@@ -121,7 +135,7 @@
                   </td> -->
                   <td class="text-center">
                     {% for v in i %}
-                    {{v.purchase_amount|floatformat:2|intspace}}
+                    {{v.total|floatformat:2|intspace}}
                     {% if not forloop.counter == i|length %}<br>{% endif %}
                     {% endfor %}
                   </td>
@@ -132,48 +146,93 @@
 
         </tfoot>
       </table>
+      
 
     </div>
 
-    <div class="text-center">
-      <table class="table table-bordered" style="margin-bottom: 35px;">
+    <div class="text-center float-end">
+      <table class="table table-bordered">
+        
         <tr style="font-size: 10px;
         font-weight: 800;border: 1px solid">
           <td colspan="10">
             <strong style="font-size: 13px" >
-              Total
+              Total HT
             </strong>
           </td>
 
           <td>
             <strong class="ttcgc{{facture.id}}" style="font-size: 15px">
-              {{ttc|floatformat:2|intspace}}
+              {{facture.ht|floatformat:2|intspace}}
+            </strong>
+          </td>
+        </tr>
+        <tr style="font-size: 10px;
+        font-weight: 800;border: 1px solid">
+          <td colspan="10">
+            <strong style="font-size: 13px" >
+              TVA
+            </strong>
+          </td>
+
+          <td>
+            <strong class="ttcgc{{facture.id}}" style="font-size: 15px">
+              {{facture.tva|floatformat:2|intspace}}
+            </strong>
+          </td>
+        </tr>
+        <tr style="font-size: 10px;
+        font-weight: 800;border: 1px solid">
+          <td colspan="10">
+            <strong style="font-size: 13px" >
+              Total TTC
+            </strong>
+          </td>
+
+          <td>
+            <strong class="ttcgc{{facture.id}}" style="font-size: 15px">
+              {{facture.total|floatformat:2|intspace}} 
             </strong>
           </td>
         </tr>
       </table>
-      <div style="font-size: 15px; text-align: start; margin-bottom:6px;">
-          Arreter la presente facture à la somme de:
-        <strong class="totalfactureprint" style="font-size:17px ;"></strong> <br>
-        <strong class='mt-5' style="font-size: 15px; text-align: start;"> Vent Hors Champs de TVA (Art 89-2° du CGI)</strong>
-      </div>
-      <div style="font-size:11px; margin-top:15px;">
-        {{request.user.retailer.retailer_user}} address <br>TEL: -- ICE: -- IF: -- PT: --
-      </div>
+      {{text}}
+      <!-- <small>Sold client: {{sold}}DH</small> -->
     </div>
+    <hr>
+    {{user.retailer_user.retailer.name}} {{user.retailer_user.retailer.address}}<br>TEL: {{user.retailer_user.retailer.phone}} ICE: {{user.retailer_user.retailer.ice}} IF:{{user.retailer_user.retailer.id_fiscal}} TP:{{user.retailer_user.retailer.pt}}
   </div>
   {% else %}
   <div class="postion-relative px-5 facture{{facture.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
 
-    <div class="border p-2 text-center">
-      {{user.retailer_user.retailer.name}}
+    <div class="row border p-2 text-center">
+      <img class="col-3" src="{%if user.retailer_user.retailer.logo%}{{user.retailer_user.retailer.logo.url}}{%endif%}" style="width: 15%">
+      <!-- {{user.retailer_user.retailer.name}} -->
+      <div class="d-flex justify-content-between col-9">
+          <div>
+            <div
+              >Bon N°: <strong>{{facture.facture_no}}</strong>
+            </div>
+            <div>
+              Date: <strong>{{facture.datebon|date:"d/m/Y H:i"}}</strong>
+            </div>
+          </div>
+          <div>
+            <div>
+              cleint: <strong>{{facture.client.customer_name.upper}} </strong>
+            </div>
+
+
+          </div>
+        </div>
     </div>
-    <!-- facture header -->
+
+    <!-- facture header 
     <div class="">
         <div class="d-flex justify-content-between">
           <div>
             <div
-              >Facture N°: <strong>{{facture.receipt_no}}</strong>
+              >Bon N°: <strong>{{facture.facture_no}}</strong>
             </div>
             <div>
               Date: <strong>{{facture.datebon|date:"d/m/Y"}}</strong>
@@ -181,19 +240,15 @@
           </div>
           <div>
             <div>
-              cleint: <strong>{{facture.customer.customer_name.upper}}</strong>
+              cleint: <strong>{{facture.client.customer_name.upper}} </strong>
             </div>
-            <div class="">
-              ICE: <strong>
-                 {{facture.customer.ice}}
-              </strong>
-            </div>
+
 
           </div>
         </div>
 
 
-    </div>
+    </div>-->
 
     <!-- facture items -->
     <div class="orderitems mt-3 bg-white rounded p-2 position-relative">
@@ -202,22 +257,22 @@
         <thead style="font-size: 10px;
         font-weight: 800;" class="text-center">
           <tr>
-            <!-- <td style="width: 19%;">Ref</td> -->
-            <td style="width: 35%;">Designation</td>
-            <td style="width: 9%;">Qté</td>
-            <td style="width: 14%;">P.U</td>
+            <td>Ref</td>
+            <td>Designation</td>
+            <td>Qté</td>
+            <td>P.U</td>
             <!-- <td style="width: 5%;">Rem</td> -->
-            <td style="width: 16%">Mantant</td>
+            <td>Mantant</td>
           </tr>
         </thead>
         <tbody>
           <tr>
-              <!-- <td style="height: 150mm;padding-left:3px">
+              <td style="padding-left:3px">
                 {% for v in i %}
-                {{v.product.ref.upper}} {{i.id}}
+                {{v.product.ref.upper}}
                 {% if not forloop.counter == i|length %}<br>{% endif %}
                 {% endfor %}
-              </td> -->
+              </td>
             <td style="height: 190mm;white-space: nowrap;padding-left:3px">
                 {% for v in i %}
                   {{v.product.car.upper|slice:"50"}}
@@ -226,7 +281,7 @@
             </td>
             <td class="text-center">
               {% for v in i %}
-              {{v.quantity}}
+              {{v.qty}}
               {% if not forloop.counter == i|length %}<br>{% endif %}
               {% endfor %}
             </td>
@@ -244,7 +299,7 @@
             </td> -->
             <td class="text-center">
               {% for v in i %}
-              {{v.purchase_amount|floatformat:2|intspace}}
+              {{v.total|floatformat:2|intspace}}
               {% if not forloop.counter == i|length %}<br>{% endif %}
               {% endfor %}
             </td>
@@ -256,12 +311,7 @@
 
     <!-- facture footer -->
 
-    <div class="text-center" style="font-size:11px">
 
-      LOT ARGANA N° B25 - AIT MELLOUL <br>
-      IF: 15251205 - Patente: 49815086 - CNSS: 5921079 - ICE: 001667720000027 <br>
-      Fixe: +212 528 24 35 17 - Tel: 06 66 03 72 81
-    </div>
 
   </div>
   {% endif %}

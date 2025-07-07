@@ -6,123 +6,8 @@
 
 {% block content %}
 
-<!-- add supplier -->
-<div class="shadow-lg d-none bg-white p-2 rounded position-absolute addsupplierholder"style="right:0; width:40vw; top:0; height: 100vh;">
-    <div class="bg-primary text-white d-flex justify-content-between">
-        <h2>
-            Ajouter Fournisseur
-        </h2>
-        <button onclick="$('.addsupplierholder').addClass('d-none')">X</button>
-    </div>
-
-        <br>
-        <label>
-            <strong>Nom (*)</strong>
-        </label>
-        <input type="text" class="form-control notempty" name="name" required>
-        <br>
-        <label>
-            <strong>Phone1 (*)</strong>
-        </label>
-        <input type="number" class="form-control notempty" name="phone1" required>
-        <br>
-        <label>
-            <strong>phone2</strong>
-        </label>
-        <input type="text" class="form-control" name="phone2">
-        <br>
-        <label>
-            <strong>Address</strong>
-        </label>
-        <input type="text" class="form-control" name="address">
-        <br>
-        <label>
-            <strong>Website</strong>
-        </label>
-        <input type="text" class="form-control" name="website">
-        <br>
-        <button class="btn w-100 btn-success addsuppliersubmitbtn">Ajouter</button>
-</div>
-
-<!-- add product -->
-<div class="container position-absolute bg-white addproductholder shadow-lg d-none rounded" style="right:0; width: 60vw;top:0; height: 100vh; z-index: 99;">
-    <div class="border p-3 ">
-        <div class="bg-primary d-flex justify-content-between">
-            <h3 class="text-center border-bottom text-white p-2">
-                Ajouter un produit
-            </h3>
-            <button onclick="$('.addproductholder').toggleClass('d-none')">X</button>
-        </div>
-        <form method="post" action="{% url 'product:addoneproduct' %}" class="addoneproductform">
-            {% csrf_token %}
-            <div class="row">
-                <div class="mb-3 col-md-6">
-                    <strong for="">Categorie (*)</strong> <br>
-                    <select style="width: 100%;" class="form-select checkref  notempty select2" name="pcategory">
-                        <option value=""></option>
-                        {% for i in children %}
-                        <option value="{{i.id}}">
-                            {{i.name.upper}}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-6">
-                    <strong>
-                        Marque (*) <span class="fa fa-refresh refreshmark"></span>
-                    </strong>
-                    <br>
-                    <select style="width: 100%;" class="form-select checkref markselect  notempty select2" type="text" name="mark">
-                        <option value=""></option>
-                        {% for i in marks %}
-                        <option value="{{i.id}}">
-                            {{i.name.upper}}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
 
 
-            <div class="row">
-                <div class="col-md-6
-                mb-3">
-                    <b class="text-center text-danger checkerror d-none">
-                        Deja existé
-                    </b>
-                    <div>
-                        <strong>
-                            Ref. (*)
-                        </strong>
-                        <input class="form-control checkref notempty" type="text" name="ref" >
-                    </div>
-
-                </div>
-                <div class="col-md-6
-                mb-3">
-                    <strong>
-                        Designation (*)
-                    </strong>
-                    <input  class="form-control notempty" type="text" name="car" >
-                </div>
-            </div>
-            <!-- <div class="mb-3">
-                <strong>
-                    Article
-                </strong>
-                <input class="form-control" required type="text" name="name" >
-            </div> -->
-
-
-
-
-        <input type="hidden" name="dest" value="receive">
-        <button type="submit" class="btn btn-primary addoneproductbtn" disabled>Ajouter</button>
-
-        </form>
-
-    </div>
-</div>
 
 
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -502,22 +387,22 @@
                 $('#grandTotal').text((tt*1.2).toFixed(2))
             })
         })
-         $('[name=supplier]').on('change', ()=>{
-             if ($('[name=supplier]').val()!=0){
-                 let supplier=$('[name=supplier]').val()
-                 $('.loading').removeClass('d-none').addClass('d-flex');
-                 $.post('{% url "product:getsupplierproducts" %}', {
-                     'csrfmiddlewaretoken': '{{ csrf_token }}',
-                     'supplier': $('[name="supplier"]').val(),
-                 },function (result, status) {
-                     console.log(result.enteredpdcts)
-                      $('.itemsbon').html(result.enteredpdcts)
-                     $('.loading').removeClass('d-flex').addClass('d-none');
-                     calculate()
-                     })
-                    }
+        //  $('[name=supplier]').on('change', ()=>{
+        //      if ($('[name=supplier]').val()!=0){
+        //          let supplier=$('[name=supplier]').val()
+        //          $('.loading').removeClass('d-none').addClass('d-flex');
+        //          $.post('{% url "product:getsupplierproducts" %}', {
+        //              'csrfmiddlewaretoken': '{{ csrf_token }}',
+        //              'supplier': $('[name="supplier"]').val(),
+        //          },function (result, status) {
+        //              console.log(result.enteredpdcts)
+        //               $('.itemsbon').html(result.enteredpdcts)
+        //              $('.loading').removeClass('d-flex').addClass('d-none');
+        //              calculate()
+        //              })
+        //             }
 
-                })
+        //         })
         //             $('.itemsselectholder').html(result.data)
         //             $('.refexeption').on('change', function(){
         //                 let ref=$('.refexeptioninp').val()
@@ -570,7 +455,7 @@
 
 
 
-            $('#all-items').live('change', function(){
+            $('#all-items').on('change', function(){
                 if ($(this).val()==0){
                     return
                 }
@@ -596,7 +481,7 @@
             });
 
 
-            $('#addsuplly').live('click', function () {
+            $('#addsuplly').on('click', function () {
                 if (($.inArray(true, $('.price').map((t, i)=>$(i).val()=="")) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()=="")) !== -1) || ($.inArray(true, $('.price').map((t, i)=>$(i).val()==0)) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()==0)) !== -1)) {
 
                     showerror();
@@ -646,10 +531,15 @@
                                 'bondate': $('[name="bondate"]').val(),
                                 'total': parseFloat($('#grandTotal').text()),
                                 'nbon':$('#invoice_number').val(),
+                                'facture':'{{facture}}'
                             }, function (result, status) {
                                 //refresh the page
                                 //location.reload()
-                                window.location.href='/product/bonsentrees/'
+                                {% if user.groups.all.0.name == 'account' %}
+                                window.location.href='/product/bonsentrees?facture={{facture}}'
+                                {% else %}
+                                window.location.href='/product/bonsentrees'
+                                {% endif %}
                             }
                         ).fail(function (xhr, status, errors) {
                             alert('خطأ في البيانات المدخلة، يرجى التأكد من صحة البيانات والمحاولة مرة أخرى');

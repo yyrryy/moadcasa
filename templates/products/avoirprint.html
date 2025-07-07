@@ -36,13 +36,12 @@
 </head>
 <body>
 <div id="printfc{{facture.id}}" style="position:relative;">
-
   {% for i in orderitems %}
   {% if forloop.counter == orderitems|length %}
   <!-- last iteration -->
   <div class="postion-relative px-5 facture{{facture.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
     <div class="row border p-2 text-center">
-      <img class="col-3" src="{%if user.retailer_user.retailer.logo%}{{user.retailer_user.retailer.logo.url}}{%endif%}" style="width: 15%">
+      <img class="col-3" src="/media/logo.jpg" style="width: 15%">
       <!-- {{user.retailer_user.retailer.name}} -->
       <div class="d-flex justify-content-between col-9">
           <div>
@@ -50,7 +49,7 @@
               >Bon N°: <strong>{{facture.receipt_no}}</strong>
             </div>
             <div>
-              Date: <strong>{{facture.datebon|date:"d/m/Y H:i"}}</strong>
+              Date: <strong>{{facture.dateavoir|date:"d/m/Y"}}</strong>
             </div>
           </div>
           <div>
@@ -71,7 +70,7 @@
               >Bon N°: <strong>{{facture.receipt_no}}</strong>
             </div>
             <div>
-              Date: <strong>{{facture.datebon|date:"d/m/Y"}}</strong>
+              Date: <strong>{{facture.dateavoir|date:"d/m/Y"}}</st>
             </div>
           </div>
           <div>
@@ -135,7 +134,7 @@
                   </td> -->
                   <td class="text-center">
                     {% for v in i %}
-                    {{v.purchase_amount|floatformat:2|intspace}}
+                    {{v.total|floatformat:2|intspace}}
                     {% if not forloop.counter == i|length %}<br>{% endif %}
                     {% endfor %}
                   </td>
@@ -162,21 +161,21 @@
 
           <td>
             <strong class="ttcgc{{facture.id}}" style="font-size: 15px">
-              {{ttc|floatformat:2|intspace}} {{text}}
+              {{facture.grand_total|floatformat:2|intspace}} {{text}}
             </strong>
           </td>
         </tr>
       </table>
-      <small>Sold client: {{sold}}DH</small>
+
     </div>
     <hr>
-    <!-- {{user.retailer_user.retailer.name}} {{user.retailer_user.retailer.address}}<br>TEL: {{user.retailer_user.retailer.phone}} ICE: {{user.retailer_user.retailer.ice}} IF:{{user.retailer_user.retailer.id_fiscal}} TP:{{user.retailer_user.retailer.tp}} -->
+    {{request.user.retailer_user.name}} {{request.user.retailer_user.address}}<br>TEL: {{request.user.retailer_user.phone}} ICE: {{request.user.retailer_user.ice}} IF:{{request.user.retailer_user.id_fiscal}} TP:{{request.user.retailer_user.tp}}
   </div>
   {% else %}
   <div class="postion-relative px-5 facture{{facture.id}}holder p-3" style="min-height: 29.7cm;width: 21cm; border:1px solid;">
 
     <div class="row border p-2 text-center">
-      <img class="col-3" src="{%if user.retailer_user.retailer.logo%}{{user.retailer_user.retailer.logo.url}}{%endif%}" style="width: 15%">
+      <img class="col-3" src="/media/logo.jpg" style="width: 15%">
       <!-- {{user.retailer_user.retailer.name}} -->
       <div class="d-flex justify-content-between col-9">
           <div>
@@ -184,7 +183,7 @@
               >Bon N°: <strong>{{facture.receipt_no}}</strong>
             </div>
             <div>
-              Date: <strong>{{facture.datebon|date:"d/m/Y H:i"}}</strong>
+              Date: <strong>{{facture.dateavoir|date:"d/m/Y"}}</strong>
             </div>
           </div>
           <div>
@@ -205,7 +204,7 @@
               >Bon N°: <strong>{{facture.receipt_no}}</strong>
             </div>
             <div>
-              Date: <strong>{{facture.datebon|date:"d/m/Y"}}</strong>
+              Date: <strong>{{facture.dateavoir|date:"d/m/Y"}}</st>
             </div>
           </div>
           <div>
@@ -269,7 +268,7 @@
             </td> -->
             <td class="text-center">
               {% for v in i %}
-              {{v.purchase_amount|floatformat:2|intspace}}
+              {{v.total|floatformat:2|intspace}}
               {% if not forloop.counter == i|length %}<br>{% endif %}
               {% endfor %}
             </td>

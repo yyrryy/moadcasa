@@ -347,7 +347,7 @@
 
 
 
-            $('#create-invoice').live('click', function () {
+            $('#create-invoice').on('click', function () {
                 if ($('#item-name').hasClass('item-name') == false) {
                     showerror('No products');
                     return;

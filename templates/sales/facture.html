@@ -103,7 +103,7 @@
                 <hr>
                 <div class="text-center">
                   <div >
-                    TATA PIECES AUTOS N° 93 RUE GUELMIM HAY AL FARAH AIT MELLOUL <br>TEL: 0667929989 ICE: 0032154890000095 IF: 20708773 TP: 49813306
+                    {{request.user.retailer_user.name}} {{request.user.retailer_user.address}}<br>TEL: {{request.user.retailer_user.phone}} ICE: {{request.user.retailer_user.ice}} IF:{{request.user.retailer_user.id_fiscal}} TP:{{request.user.retailer_user.tp}}
                   </div>
 		<div> 
                   
@@ -118,29 +118,7 @@
 <script src="/static/js/spellingnumbers.js"></script>
 <script>
 
-  function printfacture(bonid){
-
-    url = window.location.pathname.split( '/' );[0]
-    var myWindow = window.open('http://'+window.location.href.split( '/' )[2]+'/product/factureprint/'+bonid, '', 'width=900,height=900');
-
-    myWindow.focus();
-
-    myWindow.addEventListener('load', function() {
-    console.log('New window loaded.');
-
-    // Wait for 5 seconds before printing
-    setTimeout(function() {
-    try {
-      myWindow.print();
-      console.log('Print command issued.');
-      myWindow.close();
-      console.log('New window closed.');
-    } catch (e) {
-      console.error('Failed to print and close the window:', e);
-    }
-    }, 300); // 1000 milliseconds = 1 seconds
-    }, false);
-    }
+  
     $('.frenchword').text($.spellingNumber({{inv.grand_total|floatformat:2}}, {
     lang:'fr',
     wholesUnit:"Dirhams",

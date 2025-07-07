@@ -200,7 +200,7 @@
 
             
 
-            $('#all-items').live('change', function(){
+            $('#all-items').on('change', function(){
                 if ($(this).val()==0){
                     return
                 }
@@ -216,7 +216,7 @@
             });
             
             
-            $('#addsuplly').live('click', function () {
+            $('#addsuplly').on('click', function () {
                 if ($('#item-name').hasClass('item-name') == false || $('[name=supplier]').val()==0 || $('#invoice_number').val()=='') {
                     showerror();
                     return;

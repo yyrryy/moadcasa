@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import random
-
+from django.db.models import Sum
 from django.db import models
 from django.db.models.signals import post_save
 
@@ -78,7 +78,21 @@ class SalesHistory(DatedModel):
 
     def __unicode__(self):
         return self.retailer.name
-
+    @classmethod
+    def totalclient(cls, customer):
+        """
+        Returns the total number of bons (sales records) for a given client.
+        :param customer_id: ID of the customer
+        :return: Total bons as an integer
+        """
+        return cls.objects.filter(customer=customer).aggregate(
+            total_bon_sum=Sum('grand_total')
+        )['total_bon_sum'] or 0  # Return 0 if no bons exist
+    @classmethod
+    def totalclientavance(cls, customer):
+        return cls.objects.filter(customer=customer).aggregate(
+            total_bon_sum=Sum('paid_amount')
+        )['total_bon_sum'] or 0
 
 # Signals Function
 from django.utils import timezone
@@ -130,6 +144,18 @@ class Avoir(DatedModel):
     grand_total = models.DecimalField(
         max_digits=65, decimal_places=2, default=0, blank=True, null=True
     )
+    isfacture = models.BooleanField(default=False)
+    @classmethod
+    def totalclient(cls, customer):
+        return cls.objects.filter(customer=customer, isfacture=True).aggregate(
+            total_bon_sum=Sum('grand_total')
+        )['total_bon_sum'] or 0  # Return 0 if no bons exist
+    @classmethod
+    def totalclientfc(cls, customer):
+        return cls.objects.filter(customer=customer, isfacture=True).aggregate(
+            total_bon_sum=Sum('grand_total')
+        )['total_bon_sum'] or 0  # Return 0 if no bons exist
+    
 
 # Signals Function
 
