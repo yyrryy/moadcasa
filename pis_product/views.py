@@ -2517,12 +2517,16 @@ def addsupply(request):
             prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
             product.prnet=prnet
             product.remise=remise
-            product.price=i['prventmag'] or 0
-            product.prvente=i['prventgro'] or 0
+            
             product.prices=json.dumps(prices)
             product.command=False
             product.originsupp=supplier
             product.supplier=None
+            print('>>>> prices', i['prventmag'], i['prventgro'])
+            # if int(i['prventmag'])>0:
+            #     product.price=i['prventmag']
+            # if int(i['prventgro'])>0:
+            #     product.prvente=i['prventgro']
             print('>> price', i['price'])
             StockIn.objects.create(
                 product=product,
@@ -3366,10 +3370,25 @@ def getproductdata(request):
     id=request.GET.get('id')
     facture=request.GET.get('facture')=='1'
     product=Product.objects.get(pk=id)
+    lowprice=0.00
+    stockin=StockIn.objects.filter(product_id=id, avoir_reciept=None).order_by('price').first()
+    if stockin:
+        lowprice=stockin.price
+    clientid=request.GET.get('clientid')    
+    clientprice=0.00
+    ll=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=id).last()
+    clientprice=0.00
+    if ll:
+        print('>> ll', ll)
+        clientprice=float(ll.price)
     return JsonResponse({
         'stock':float(product.stockfacture) if facture else float(product.stock),
         'price':product.pr_achat,
-        'prnet':product.prnet
+        'prnet':product.prnet,
+        'lowpriceachat':lowprice,
+        'prixgro':product.prvente,
+        'prixcomptoir':product.price,
+        'clientprice':clientprice,
     })
 
 def updatestockcontoir(request):
@@ -3553,7 +3572,7 @@ def echeanceclient(request):
         'echeances':echeances,
         'totalamount':totalamount
     }
-    return render(request, 'products/echeances.html', ctx)
+    return render(request, 'products/echeancesclient.html', ctx)
 
 def makeecheancepaid(request):
     id=request.GET.get('id')
@@ -3603,6 +3622,26 @@ def makeecheancecash(request):
     return JsonResponse({
         'success':True
     })
+
+def makeecheanceclientcash(request):
+    id=request.GET.get('id')
+    echeance=PaymentClient.objects.get(pk=id)
+    echeance.iscash=True
+    echeance.save()
+    retailer=Retailer.objects.get(pk=1)
+    amount=echeance.amount
+    raison=f'payment espece {echeance.mode} {echeance.npiece} - {echeance.supplier.name}'
+    retailer.caisseexterieur=float(retailer.caisseexterieur)+float(amount)
+    retailer.save()
+    Outcaisseext.objects.create(
+        amount=amount,
+        raison=raison,
+    )
+    return JsonResponse({
+        'success':True
+    })
+
+
 
 def updatecaisse(request):
     amount=request.GET.get('amount')
@@ -4720,3 +4759,11 @@ def searchclient(request):
             'text':f'{i.customer_name} - {i.customer_phone}',
         })
     return JsonResponse({'results': results})
+
+def lowpriceachat(request):
+    id=request.GET.get('id')
+    # price=0
+    products=StockIn.objects.filter(product_id=id, avoir_reciept=None).order_by('price').first() or 0.00
+    return JsonResponse({
+        'price':products.price
+    })

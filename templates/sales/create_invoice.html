@@ -68,6 +68,7 @@
                 </div>
                 <div class="bg-dark text-white p-2 rounded mt-2">
                     Prix client: <strong class="clientprice"></strong>
+                    
                 </div>
                 <div class="bg-dark text-white p-2 rounded mt-2">
                     <strong>Sold client:</strong> <strong class="soldclient"></strong>
@@ -101,14 +102,20 @@
         <div id="item-data-sc" class="table-responsive item-data-sc col-10">
             <div class="d-flex justify-content-between bg-white">
     
-                <div class="col-md-6 mb-3 productslistholder position-relative">
-                    <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
-                        +
-                    </button>
-                    <strong>
-                        Produits
-                    </strong> <br>
-                    <select name="" id="" class="productslist form-control" style="width: 100%;"></select>
+                <div class="col-md-6 mb-3 productslistholder position-relative  d-none">
+                    <div class="d-flex">
+                        <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
+                            +
+                        </button>
+                        <select name="" id="" class="productslist form-control" style="width: 100%;"></select>
+                        <div class="p-2 col-4">
+                            Prix Gro: <strong class="prixgro"></strong>
+                        </div>
+                        <div class="p-2 col-4">
+                            Prix Comptoir: <strong class="prixcomptoir"></strong>
+                        </div>
+                            
+                    </div>
                     <!-- <div class="mt-3 row">
                         <div class="col-3">
                             Qty
@@ -412,9 +419,11 @@
             alertify.error('Deja')
             return
           }
-          $.get('/product/clientprice', {'clientid': $('[name="customer"]').val(), 'productid':id}, (data) => {
-                    $('.clientprice').text(data.price);
-                    thisprice=data.price
+          $.get('/product/getproductdata', {'clientid': $('[name="customer"]').val(), 'id':id}, (data) => {
+                    $('.clientprice').text(data.clientprice);
+                    $('.prixgro').text(data.prixgro);
+                    $('.prixcomptoir').text(data.prixcomptoir);
+                    thisprice=data.clientprice
                     row={
                 'article':ref+' - '+car,
                 'stock':stock,

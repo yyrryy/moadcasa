@@ -102,6 +102,7 @@ class PaymentSupplier(models.Model):
 class PaymentClient(models.Model):
     isfacture=models.BooleanField(default=False)
     ispaid=models.BooleanField(default=False)
+    iscash=models.BooleanField(default=False)
     facture=models.ForeignKey('Facture', on_delete=models.CASCADE, default=None, null=True, blank=True)
     client=models.ForeignKey(Customer, on_delete=models.CASCADE, default=None)
     created_at = models.DateTimeField(auto_now_add=True)

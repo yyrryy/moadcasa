@@ -84,24 +84,25 @@
         </div>
 
         <div class="rounded p-2 bg-white shadow mt-2">
-            <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
+            <div class="d-flex">
+                <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
                 +
             </button>
             <select class="productslist form-control"></select>
+            </div>
 
-            <div>
+            <div class="bg-dark p-2 text-white mt-2 rounded">
                 Stock: <span class="pdctselectedstock"></span>
             </div>
     
-            <div>
-                Dernier prix d'achat: <span class="pdctselecedprachat"></span>
+            <div class="bg-dark p-2 text-white mt-2 rounded">
+                Dernier prix d'achat: <span class="pdctselecedprachat"></span> <br>
+                Prix achat moins chere <span class="lowpdctselecedprachat"></span>
             </div>
             <hr>
                 <div class="form-group">
-
                     <label for="name" class="form-label">Quantité</label>
                     <input type="number" class="addqtyinp form-control" placeholder="Qty">
-
                     <div class="addstock"></div>
                 </div>
                 <div class="form-group">
@@ -112,22 +113,22 @@
                     <div class="addprice">  </div>
                     <div class="addprnet"></div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" hidden>
 
                     <label for="name" class="form-label">Remise</label>
-                    <input type="number" class="addremiseinp form-control" placeholder="Remise">
+                    <input value="0" type="number" class="addremiseinp form-control" placeholder="Remise">
                     <div class="addremise">  </div>
                     <div class="addprnet"></div>
                 </div>
 
-                <div class="form-group">
+                 <div class="form-group" hidden>
 
-                    <label for="name" class="form-label">Prix vente mag</label>
+                    <label for="name" class="form-label">Prix vente compt.</label>
                     <input type="number" class="addprventemaginp form-control" placeholder="prventemag">
                     <div class="addprventemag">  </div>
                     <div class="addprnet"></div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" hidden>
 
                     <label for="name" class="form-label">Prix vente gro</label>
                     <input type="number" class="addprventegroinp form-control" placeholder="prventegro">
@@ -160,8 +161,8 @@
                     <th>Quantité</th>
                     <th>Prix unit.</th>
                     <th>Remise</th>
-                    <th>Total</th>
-                    <th>Pr. vente mag.</th>
+                    <th>Total</th> 
+                    <th>Pr. vente compt..</th>
                     <th>Pr. vente GRO</th>
                     <th></th>
                 </tr>
@@ -230,6 +231,11 @@
             }
             $('.pdctselectedstock').text(stock)
             $('.pdctselecedprachat').text(p)
+            $.get('/product/getproductdata', {
+                'id':productid
+            }, (data)=>{
+                $('.lowpdctselecedprachat').text(data.lowpriceachat)
+            })
             // else{
             // $('.itemsbon').prepend(`<tr class="item-row">
             //         <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${ref} - ${car}</div></div></td>
@@ -306,7 +312,7 @@
                     <td id="item-name" class="item-name"><div class="delete-btn d-flex justify-content-between"><div class="invoice-item" id="invoice-item">${ref} - ${car}</div></div></td>
                     <td><input class="form-control qty calculate" placeholder="Quantity" type="number" onkeyup="saverow(event)" value="${qtyinpadd}"></td>
                     <td><input class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)" value="${priceinpadd}"> </td>
-                    <td><input class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)" value="${remiseinpadd}"> </td>
+                    <td><input readonly value="0" class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)" value="${remiseinpadd}"> </td>
                     <td><span class="total">${totalrow}</span></td>
                     <td><input class="form-control prventmag" placeholder="Pr. vente. mag" type="number" step=0.01 onkeyup="saverow(event)" value="${prventemag}"> </td>
                     <td><input class="form-control prventgro" placeholder="Pr. vente. gro" type="number" step=0.01 onkeyup="saverow(event)" value="${prventegro}"> </td>
@@ -528,7 +534,7 @@
                         <input
                         value="${i.price}"
                         class="form-control price calculate" placeholder="Price" type="number" step=0.01 onkeyup="saverow(event)"> </td>
-                    <td><input
+                    <td><input readonly
                         value="${i.remise}"
                         class="form-control remise calculate" placeholder="Rmise" type="number" step=0.01 onkeyup="saverow(event)"> </td>
                     <td><span class="total">${i.total}</span></td>
@@ -646,7 +652,7 @@
 
 
             $('#addsuplly').on('click', function () {
-                if (($.inArray(true, $('.price').map((t, i)=>$(i).val()=="")) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()=="")) !== -1) || ($.inArray(true, $('.price').map((t, i)=>$(i).val()==0)) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()==0)) !== -1)) {
+                if (($.inArray(true, $('.price').map((t, i)=>$(i).val()=="")) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()=="")) !== -1) || ($.inArray(true, $('.price').map((t, i)=>$(i).val()<=0)) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()<=0)) !== -1)) {
 
                     showerror();
                     $('.price').css('border-color', 'red');

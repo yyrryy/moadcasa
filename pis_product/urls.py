@@ -11,7 +11,7 @@ from pis_product.logs_view import DailyStockLogs, MonthlyStockLogs
 urlpatterns = [
     # re_path(r'^notworking/',views.notworking, name='notworking'),
     # re_path(r'^notworking/',views.notworking, name='notworking'),
-    # re_path(r'^notworking/',views.notworking, name='notworking'),
+    re_path(r'^lowpriceachat/',views.lowpriceachat, name='lowpriceachat'),
     re_path(r'^addoneproductinbase/',views.addoneproductinbase, name='addoneproductinbase'),
     re_path(r'^searchclient',views.searchclient, name='searchclient'),
     re_path(r'^soldclient/',views.soldclient, name='soldclient'),
@@ -71,6 +71,8 @@ urlpatterns = [
     re_path(r'^echeanceclient/',views.echeanceclient, name='echeanceclient'),
     re_path(r'^makeecheancepaid/',views.makeecheancepaid, name='makeecheancepaid'),
     re_path(r'^makeecheancecash/',views.makeecheancecash, name='makeecheancecash'),
+    re_path(r'^makeecheanceclientpaid/',views.makeecheanceclientpaid, name='makeecheanceclientpaid'),
+    re_path(r'^makeecheanceclientcash/',views.makeecheanceclientcash, name='makeecheanceclientcash'),
     re_path(r'^updatecaisse/',views.updatecaisse, name='updatecaisse'),
     re_path(r'^loadpdctsinstock/',views.loadpdctsinstock, name='loadpdctsinstock'),
     re_path(r'^modifierboncomptoir/(?P<id>\d+)',views.modifierboncomptoir, name='modifierboncomptoir'),

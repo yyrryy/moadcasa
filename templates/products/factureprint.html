@@ -149,7 +149,10 @@
       
 
     </div>
-
+    <div>
+      arrête la presente facture à la somme de: <br>
+        <strong class="frenchword text-uppercase"></strong>
+    </div>
     <div class="text-center float-end">
       <table class="table table-bordered">
         
@@ -319,9 +322,18 @@
 
 </div>
 
-
+<script src="/static/js/spellingnumbers.js"></script>
 <script>
 
+  
+    $('.frenchword').text($.spellingNumber({{facture.total|floatformat:2}}, {
+    lang:'fr',
+    wholesUnit:"Dirhams",
+    fractionUnit:"cents",
+    digitsLengthW2F: 2,
+    decimalSeperator:"et"
+
+  }))
     function entete(){
       if ($('.factureheader').hasClass('show')) {
         $('.factureheader').removeClass('show')
