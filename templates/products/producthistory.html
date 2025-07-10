@@ -387,19 +387,20 @@
     function deletearticle(event, productId) {
         event.preventDefault();
         const password = $('[name="password"]').val();
-        if (!password) {
-            alertify.('Please enter the password.');
+        if (!password || password.trim() === '') {
+            // Display an error message if the password field is empty
+            alertify.error('Please enter the password.');
             return;
         }
-        if (confirm('Are you sure you want to delete this article?')) {
-            $.post('/product/delete', {
+        $.post('/product/deleteproduct/', {
                 'csrfmiddlewaretoken': '{{ csrf_token }}',
-                'productId': productId,
+                'id': productId,
                 'password': password
             }, function(response) {
+                console.log(response)
                 if (response.success) {
                     alertify.success('Article deleted successfully.');
-                    window.location.href = '/products';
+                    window.location.href = '/';
                 } else {
                     alertify.error('Failed to delete article: ' + response.message);
                 }
@@ -407,7 +408,7 @@
                 alertify.error('An error occurred while deleting the article.');
             });
         }
-    }
+    
   function printcodebar(){
     codebarprice=$('.codebarprice').val()
     codebarqty=$('.codebarqty').val()

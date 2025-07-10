@@ -3179,15 +3179,20 @@ class StockInUpdateView(UpdateView):
 
 
 def deleteproduct(request):
-    if request.method == 'POST':
-        product_id = request.POST.get('id')
-        product = Product.objects.get(id=product_id)
-        print("product.stockin_product", product.stockin_product)
-        # Check if product has stock in or stock out
-        # if product.stockin_product.exists() or product.stockout_product.exists():
-        #     return JsonResponse({'status': 'error', 'message': 'Cannot delete product with stock in or out'})
-        # product.delete()
-        return JsonResponse({'status': 'success'})
+    id = request.POST.get('id')
+    product = Product.objects.get(id=id)
+    print("product.stockin_product", product.stockin_product.exists(), product.purchased_product.exists())
+    if product.stockin_product.exists() or product.purchased_product.exists():
+        return JsonResponse({
+            'success':False,
+            'message':'Produit dans un bon livraison/achat'
+        })
+    
+    # Check if product has stock in or stock out
+    # if product.stockin_product.exists() or product.stockout_product.exists():
+    #     return JsonResponse({'status': 'error', 'message': 'Cannot delete product with stock in or out'})
+    product.delete()
+    return JsonResponse({'success': True})
 
 
 def searchproduct(request):
