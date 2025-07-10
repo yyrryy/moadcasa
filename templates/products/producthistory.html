@@ -108,7 +108,6 @@
                 </tbody>
             </table>
             
-            <input type="hidden" name="id" value="{{product.id}}">
             <input type="password" class="form-control border-danger" name="password">
             <button class="btn btn-danger w-100" onclick="deletearticle(event, '{{product.id}}')">
                 <i class="fa fa-trash"></i>
@@ -385,6 +384,30 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    function deletearticle(event, productId) {
+        event.preventDefault();
+        const password = $('[name="password"]').val();
+        if (!password) {
+            alertify.('Please enter the password.');
+            return;
+        }
+        if (confirm('Are you sure you want to delete this article?')) {
+            $.post('/product/delete', {
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+                'productId': productId,
+                'password': password
+            }, function(response) {
+                if (response.success) {
+                    alertify.success('Article deleted successfully.');
+                    window.location.href = '/products';
+                } else {
+                    alertify.error('Failed to delete article: ' + response.message);
+                }
+            }).fail(function() {
+                alertify.error('An error occurred while deleting the article.');
+            });
+        }
+    }
   function printcodebar(){
     codebarprice=$('.codebarprice').val()
     codebarqty=$('.codebarqty').val()
