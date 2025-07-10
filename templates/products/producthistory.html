@@ -84,6 +84,7 @@
                         <th>Prix achat NET</th>
                         <th>{{product.prnet}} Dh</th>
                     </tr>
+
                     <!-- <tr>
                         <th>% vents</th>
                         <th>{{percentage}}%</th>
@@ -106,6 +107,13 @@
                     </tr> -->
                 </tbody>
             </table>
+            
+            <input type="hidden" name="id" value="{{product.id}}">
+            <input type="password" class="form-control border-danger" name="password">
+            <button class="btn btn-danger w-100" onclick="deletearticle(event, '{{product.id}}')">
+                <i class="fa fa-trash"></i>
+                Supprimer
+            </button>
             <!-- <img src="/product/barcode/{{product.bar_code}}" alt="Barcode" style="width: 100%;">
             <input type="number" placeholder="Prix" class="form-control codebarprice">
             <input type="number" placeholder="qty" class="form-control codebarqty">

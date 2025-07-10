@@ -3182,7 +3182,11 @@ def deleteproduct(request):
     if request.method == 'POST':
         product_id = request.POST.get('id')
         product = Product.objects.get(id=product_id)
-        product.delete()
+        print("product.stockin_product", product.stockin_product)
+        # Check if product has stock in or stock out
+        # if product.stockin_product.exists() or product.stockout_product.exists():
+        #     return JsonResponse({'status': 'error', 'message': 'Cannot delete product with stock in or out'})
+        # product.delete()
         return JsonResponse({'status': 'success'})
 
 
