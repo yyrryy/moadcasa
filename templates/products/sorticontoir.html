@@ -331,9 +331,9 @@
             var [ref, car, pr_achat, stock, id, remise, prnet] = $(this).val().split('§');
             $.get('/product/getproductdata', {'id':id}, (data)=>{
                 $('.addstock').text('stock: '+data.stock)
-                $('.addprice').text('P.achat: '+data.price)
+                $('.addprice').text('P.Comptoir: '+(data.prixcomptoir).toFixed(2)) //should have 2 numbers after ,
                 $('.addpriceinp').attr('min', data.prnet)
-                $('.addprnet').text('P.Net: '+data.prnet)
+                //$('.addprnet').text('P.Net: '+data.prnet)
             })
 
         //   let repswithprice=[]

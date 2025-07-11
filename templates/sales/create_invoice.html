@@ -59,47 +59,47 @@
 <!-- bon articles -->
 
     <div class="border rounded row">
-        <div class="col-2">
-            <div class="bg-white rounded">
-                <h5>
-                    Bon Livraison #{{nbon}}
-                </h5>
-                <div class="alert alert-danger text-center item-error" style="display: none;" role="alert">
+        <div class="bg-white col-2">
+            <h5>
+                Bon Livraison #{{nbon}}
+            </h5>
+            <div class="alert alert-danger text-center item-error" style="display: none;" role="alert">
+            </div>
+            <div class="bg-dark text-white p-2 rounded mt-2">
+                Prix client: <strong class="clientprice"></strong>
+                
+            </div>
+            <div class="bg-dark text-white p-2 rounded mt-2">
+                <strong>Sold client:</strong> <strong class="soldclient"></strong>
+            </div>
+            <div class="mt-3 d-flex flex-column">
+                <select class="form-selsect customer clientselectbl " name="customer" id="customer">
+                    <option value="0">
+                        Client
+                    </option>
+                    {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.customer_name }} - {{ customer.customer_phone }}</option>
+                    {% endfor %}
+                </select>
+                <!--  this used to use modal -->
+                <!-- <button type="button" class="mt-2 btn btn-success addoneproduct" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    + Client
+                </button> -->
+                <button type="button" class="mt-2 btn btn-success" onclick="$('.addclientholder').removeClass('d-none')">
+                    + Client
+                </button>
+                <div class="mt-2">
+                    <small>Date bon</small>
+                    <input type="date" name="datebon" placeholder="Date" value="{{present_date|date:'Y-m-d'}}" class="form-control datebon">
+                    <input type="time" name="timebon" placeholder="Date" value="{{present_date|date:'H:i'}}" class="form-control timebon">
                 </div>
-                <div class="bg-dark text-white p-2 rounded mt-2">
-                    Prix client: <strong class="clientprice"></strong>
-                    
-                </div>
-                <div class="bg-dark text-white p-2 rounded mt-2">
-                    <strong>Sold client:</strong> <strong class="soldclient"></strong>
-                </div>
-                <div class="mt-3 d-flex flex-column">
-                    <select class="form-selsect customer clientselectbl " name="customer" id="customer">
-                        <option value="0">
-                            Client
-                        </option>
-                        {% for customer in customers %}
-                            <option value="{{ customer.id }}">{{ customer.customer_name }} - {{ customer.customer_phone }}</option>
-                        {% endfor %}
-                    </select>
-                    <!--  this used to use modal -->
-                    <!-- <button type="button" class="mt-2 btn btn-success addoneproduct" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        + Client
-                    </button> -->
-                    <button type="button" class="mt-2 btn btn-success" onclick="$('.addclientholder').removeClass('d-none')">
-                        + Client
-                    </button>
-                    <div class="mt-2">
-                        <small>Date bon</small>
-                        <input type="date" name="datebon" placeholder="Date" value="{{present_date|date:'Y-m-d'}}" class="form-control datebon">
-                        <input type="time" name="timebon" placeholder="Date" value="{{present_date|date:'H:i'}}" class="form-control timebon">
-                    </div>
-                </div>
+            </div>
+            <div class="rounded p-2">
             </div>
             
             
         </div>
-        <div id="item-data-sc" class="table-responsive item-data-sc col-10">
+        <div id="item-data-sc" class="col-10">
             <div class="d-flex justify-content-between bg-white">
     
                 <div class="col-md-6 mb-3 productslistholder position-relative  d-none">
@@ -151,13 +151,13 @@
     
                 </div>
             </div>
-            <div style="height: 60vh; overflow: scroll; position: relative;">
+            <div style="height: 70vh; overflow: scroll; position: relative;">
                 <table class="table table-bordered bg-white mt-2">
                     <thead>
                     <tr class="">
                         <th style="width: 45%;">Article</th>
                         <th>Stock</th>
-                        <th>Prix acht</th>
+                        <!-- <th>Prix acht</th> -->
                         <th>Prix ventes</th>
                         <th>Quantité</th>
                         <th>Total</th>
@@ -173,15 +173,19 @@
             <div>
     
                 <div class="borders shadow bg-white p-2 rounded">
-                    <div class="table-responsive d-flex justify-content-between">
+                    <div class="">
                         <table class="table table-bordered">
                             <thead>
                             <tbody>
+                                
                             <tr hidden>
                                 <td></td>
                                 <td></td>
                                 <td class="text-right"><strong>Sub Total</strong></td>
                                 <td><span id="subtotal">0.00</span></td>
+                                <td>
+                                    
+                                </td>
                             </tr>
                             <tr hidden>
                                 <td></td>
@@ -198,30 +202,52 @@
                             <tr>
                                 <!-- <td><strong>Total Qty: </strong><span id="totalQty" style="color: red; font-weight: bold">0</span></td> -->
     
-                                <td class="text-right"><h4>Total: <span id="grandTotal" style="color:red">0</span></h4> </td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td class="text-right">
-                                    <strong>Payé</strong>
+                                <td id="grandTotal" style="color:red; font-weight: bold;">0</td>
+                                <td>
+                                    <div class="row">
+                                        <div class="col-3">
+                                            Mantant <br>
+                                            <input type="number" class="form-control paidamount  me-2" placeholder="mantant">
+                                        </div>
+                                        <div class="col-3">
+                                            Mode <br>
+                                            <select class="form-control mode  me-2">
+                                                <option value="espece">espece</option>
+                                                <option value="cheque">Cheque</option>
+                                                <option value="effet">Effet</option>
+                                                <option value="virement">Virement</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-3">
+                                            N° piece <br>
+                                            <input type="text" class="form-control npiece  me-2" placeholder="N° piece">
+                                        </div>
+                                        <div class="col-3">
+                                            Echeance <br>
+                                            <input type="date" class="form-control echeance  me-2" placeholder="mantant">
+                                        </div>
+                                        
+                                    </div>
                                 </td>
-                                <td class="d-flex">
-                                    
-                                    <input autocomplete="off" class="form-control paidamount" id="paidAmount" value="0" type="number">
-                            </td>
+                                <td>
+                                    <div class="">
+    
+                                        <a id="create-invoice" href="javascript:;" title="Create Invoice" class="btn btn-primary w-100 h-100" id="load" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Processing Order">Valider</a>
+                                    </div>
+                                </td>
                             </tr>
+                            
                             <!-- <tr>
                                 <td class="text-right"><strong>Rest</strong></td>
                                 <td><span id="remainingAmount">0</span></td>
                             </tr> -->
     
                             </tbody>
+                            
                         </table>
-                        <div class="">
-    
-                            <a id="create-invoice" href="javascript:;" title="Create Invoice" class="btn btn-primary w-100 h-100" id="load" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Processing Order">Valider</a>
-                        </div>
+                        
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -462,8 +488,8 @@
           bonitems.push(row)
           localStorage.setItem('bonitems',JSON.stringify(bonitems))
             //let thisprice=0
-            
-            $('.itemsbon').prepend(`<tr class="item-row" id="itemrow${id}""><td id="item-name" class="item-name"><strong class="invoice-item" id="invoice-item">${ref} - ${car}</strong></td><td class="stock ${stock==0 ? "bg-danger text-white" : ""}">${stock}</td><td class="prachat">${pr_achat}</td><td><input type="hidden" class="prnet" value=${prnet}><input min=${prnet} value=${thisprice} class="form-control price" placeholder="Price" type="number" oninput="saverow(event)"><br><span class="text-danger errorprice d-none bg-white">Prix de vent doit etre superieur ou egal a prix net: ${prnet}</span> </td><td><input class="form-control qty" placeholder="Quantity" type="number" min=1 value=0 oninput="saverow(event)"></td><td class="total"></td><input type="hidden" class="productid" value=${id}><td><i class="btn btn-danger delete" title="Supprimer" productid="${id}" onclick="removeline(event, '${id}')"></i></td></tr>`);
+            // prix achat <td class="prachat">${pr_achat}</td>
+            $('.itemsbon').prepend(`<tr class="item-row" id="itemrow${id}""><td id="item-name" class="item-name"><strong class="invoice-item" id="invoice-item">${ref} - ${car}</strong></td><td class="stock ${stock==0 ? "bg-danger text-white" : ""}">${stock}</td><td><input type="hidden" class="prnet" value=${prnet}><input min=${prnet} value=${thisprice} class="form-control price" placeholder="Price" type="number" oninput="saverow(event)"><br><span class="text-danger errorprice d-none bg-white">Prix de vent doit etre superieur ou egal a prix net: ${prnet}</span> </td><td><input class="form-control qty" placeholder="Quantity" type="number" min=1 value=0 oninput="saverow(event)"></td><td class="total"></td><input type="hidden" class="productid" value=${id}><td><i class="btn btn-danger delete" title="Supprimer" productid="${id}" onclick="removeline(event, '${id}')"></i></td></tr>`);
 
                 jQuery().invoice().init
         
@@ -499,7 +525,8 @@
                 prachat=el.attr('prachat')
                 price=el.attr('price')
                 prnet=el.attr('prnet')
-                $('.itemsbon').append(`<tr class="item-row "><td id="item-name" class="item-name"><strong class="invoice-item" id="invoice-item">${item}</strong></td><td class="stock ${stock==0 ? "bg-danger text-white" : ""}">${stock}</td><td class="prachat">${prachat}</td><td><input min=${prnet} value=${prachat} class="form-control price" placeholder="Price" type="number"><br><span class="text-danger errorprice d-none bg-white">Prix de vent doit etre superieur ou egal a prix net: ${prnet}</span> </td><td><input class="form-control qty" placeholder="Quantity" type="number" min=1 value="0"></td><td><span class="total">0</span></td><input type="hidden" class="productid" value=${id}><td><i class="btn btn-danger delete" title="Supprimer">X</i></td></tr>`);
+                // pr achat <td class="prachat">${prachat}</td>
+                $('.itemsbon').append(`<tr class="item-row "><td id="item-name" class="item-name"><strong class="invoice-item" id="invoice-item">${item}</strong></td><td class="stock ${stock==0 ? "bg-danger text-white" : ""}">${stock}</td><td><input min=${prnet} value=${prachat} class="form-control price" placeholder="Price" type="number"><br><span class="text-danger errorprice d-none bg-white">Prix de vent doit etre superieur ou egal a prix net: ${prnet}</span> </td><td><input class="form-control qty" placeholder="Quantity" type="number" min=1 value="0"></td><td><span class="total">0</span></td><input type="hidden" class="productid" value=${id}><td><i class="btn btn-danger delete" title="Supprimer">X</i></td></tr>`);
                 $('.delete').on('click', function () {
                     $(this).closest('tr').remove();
                 });
@@ -553,8 +580,9 @@
         bonitems=JSON.parse(localStorage.getItem('bonitems'))||[]
         if (bonitems.length>0){
             $('[name="customer"]').select2().val(localStorage.getItem('clientbon')).trigger('change')
+            // prachat <td class="prachat">${i.prachat}</td>
             for (i of bonitems){
-                $('.itemsbon').append(`<tr class="item-row" id="itemrow${i.productid}""><td id="item-name" class="item-name"><strong class="invoice-item" id="invoice-item">${i.article}</strong></td><td class="stock ${i.stock==0 ? "bg-danger text-white" : ""}">${i.stock}</td><td class="prachat">${i.prachat}</td><td><input type="hidden" class="prnet" value=${i.prnet}><input min=${i.prnet} value=${i.price} class="form-control price" placeholder="Price" type="number" oninput="saverow(event)"><br><span class="text-danger errorprice d-none bg-white">Prix de vent doit etre superieur ou egal a prix net: ${i.prnet}</span> </td><td><input class="form-control qty" placeholder="Quantity" type="number" min=1 value="${i.qty}" oninput="saverow(event)"></td><td class="total">${i.qty*i.price}</td><input type="hidden" class="productid" value=${i.productid}><td><i class="btn btn-danger delete" title="Supprimer" productid="${i.productid}" onclick="removeline(event, '${i.productid}')"></i></td></tr>`);
+                $('.itemsbon').append(`<tr class="item-row" id="itemrow${i.productid}""><td id="item-name" class="item-name"><strong class="invoice-item" id="invoice-item">${i.article}</strong></td><td class="stock ${i.stock==0 ? "bg-danger text-white" : ""}">${i.stock}</td><td><input type="hidden" class="prnet" value=${i.prnet}><input min=${i.prnet} value=${i.price} class="form-control price" placeholder="Price" type="number" oninput="saverow(event)"><br><span class="text-danger errorprice d-none bg-white">Prix de vent doit etre superieur ou egal a prix net: ${i.prnet}</span> </td><td><input class="form-control qty" placeholder="Quantity" type="number" min=1 value="${i.qty}" oninput="saverow(event)"></td><td class="total">${i.qty*i.price}</td><input type="hidden" class="productid" value=${i.productid}><td><i class="btn btn-danger delete" title="Supprimer" productid="${i.productid}" onclick="removeline(event, '${i.productid}')"></i></td></tr>`);
 
                 jQuery().invoice().init
             }
@@ -679,8 +707,16 @@
                 alert("منتوجات متكررة");
                 } else {
                 $('#create-invoice').addClass('disabled')
+                amount=$('.paidamount').val()
+                mode=$('.mode').val()
+                npiece=$('.npiece').val()
+                echeance=$('.echeance').val()
                 console.log("sending");
                 $.post("{% url 'sales:generate_invoice_api' %}", {
+                        mode: mode,
+                        npiece: npiece,
+                        echeance: echeance,
+                        amount: amount,
                         datebon:datebon,
                         timebon:timebon,
                         customer_id: customer_id,

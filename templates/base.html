@@ -1236,6 +1236,11 @@ Version: 1.3.0
 
 
 <script>
+  function checkformode(event){
+    if ($('.mode').val()=='cheque' || $('.mode').val()=='effet'){
+      console.log('echeance')
+    }
+  }
   $('.addclientbtn').on('click', ()=>{
     console.log({
       'name':$('.customername').val(),
