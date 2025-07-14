@@ -129,7 +129,7 @@
     </h1>
 {% endif %}
 </div>
-{% if not bon.paid_amount >= bon.grand_total %}
+{% if not bon.paid_amount >= bon.grand_total and not bon.customer == None %}
 <div class="mt-5 rounded bg-white row">
     <strong> ajouter payment</strong><br>
     <div class="col-3">

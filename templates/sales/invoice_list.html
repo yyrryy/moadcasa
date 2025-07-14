@@ -4,19 +4,18 @@
 
 {% block content %}
     <div class="col-md-12">
-            <br>
-        <a href="{% url 'sales:create_invoice' %}"><button type="button" id="invoice" class="btn btn-primary"  id="load" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Processing">+</button></a>
-        <br><br><br>
-            <div class="bg-white rounded shadow p-2">
+            <div class="bg-white rounded shadow p-2" style="height:85vh; overflow-y: auto; position: relative;">
+                <div class="input-group custom-search-form col-md-4" style="left: 5px">
+                    <a href="{% url 'sales:create_invoice' %}"><button type="button" id="invoice" class="btn btn-primary"  id="load" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Processing">+</button></a>
+
+                    <input type="text" class="form-control search-invoice" placeholder="Chercher">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </span>
+                </div>
                 <table class="table table-striped table-advance table-bordered invoice-table">
-                    <div class="input-group custom-search-form col-md-4" style="left: 5px">
-                        <input type="text" class="form-control search-invoice" placeholder="Chercher">
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" type="button">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </span>
-                    </div>
                     <hr>
                     <thead>
                     <tr>
@@ -67,8 +66,8 @@
                     </tbody>
                 </table>
                 
-                <button class="w-100 btn btn-primary" onclick="loadmorebons()">Plus</button>
             </div>
+            <button class="w-100 btn btn-primary" onclick="loadmorebons()">Plus</button>
         </div>
 <script>
     page=1;

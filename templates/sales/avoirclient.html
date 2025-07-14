@@ -25,23 +25,69 @@
 
 
 <!-- bon articles -->
-    <div class="col-3" style="background:black;">
-        <h5 class="rounded shadow p-2 text-white" >
-            Bon Avoir: {{reseipt_no}}
+    <div class="col-4">
+        <h5 class="bg-white p-2 rounded">
+            Bon Avoir client: {{reseipt_no}}
         </h5>
-				<div>
-					<h5 class="text-white">date Avoir:</h5>
-					<input type="date" class="dateavoir form-control">
-				</div>
-        <h5 class="rounded shadow p-2 text-white">
-            Client: <br>
-            <select class="clientselect select2 form-control">
-                <option value="">---</option>
-                {% for i in clients %}
-                <option value="{{i.id}}">{{i.customer_name}} - {{i.customer_phone}}</option>
-                {% endfor %}
-            </select>
-        </h5>
+        <div class="bg-white p-2 mt-2">
+            <table class="table table-bordered">
+                <tr>
+                    <td>date</td>
+                    <td>
+                        <input type="date" class="dateavoir form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Client</td>
+                    <td>
+                        <select class="clientselect select2 form-control" style="width: 100%;">
+                            <option value="">---</option>
+                            {% for i in clients %}
+                            <option value="{{i.id}}">{{i.customer_name}} - {{i.customer_phone}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                <tr class="productslistholder d-none">
+                    <td>Produit</td>
+                    <td>
+                        <select style="width: 100%;" name="" id="" class="productslist form-control"></select>
+                    </td>
+                </tr>
+            </table>
+            <!-- <div class="d-flex align-items-center">
+                <h5 class="">date</h5>
+                <input type="date" class="dateavoir form-control">
+            </div>
+            <h5 class="mt-2">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">Client</div>
+                    <select class="clientselect select2 form-control">
+                        <option value="">---</option>
+                        {% for i in clients %}
+                        <option value="{{i.id}}">{{i.customer_name}} - {{i.customer_phone}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+            </h5>
+            <div class="mb-2 productslistholder d-none">
+                <div class="d-flex">
+
+                    <small>Products:</small> <br>
+                    <select style="width: 100%;" name="" id="" class="productslist form-control"></select>
+                </div>
+            </div> -->
+            
+        </div>
+        <div class="mt-2 bg-white p-2 border" style="height: 40vh; overflow-y: scroll;">
+            <hr>
+            <h5>
+                Historique produit
+            </h5>
+            <div class="outs"></div>
+        </div>
+        
         <!-- <h5 class="rounded shadow p-2 text-white" style="background:black;">
             N° Bon refference: {{bon.receipt_no}}
             <input type="text" name="bonid" value="{{bon.id}}" hidden>
@@ -62,7 +108,7 @@
             </div>
         </div> -->
     </div>
-    <div class="col-9">
+    <div class="col-8">
         <div class="shadow rounded p-2 bg-white">
             <div class="alert alert-danger text-center item-error" style="display: none;" role="alert">
                 ERROR
@@ -81,11 +127,9 @@
                 </div>
             </div>
             <hr> -->
-            <div id="item-data-sc" class="table-responsive item-data-sc">
-                <div class="mb-2 productslistholder d-none">
-                    <small>Products:</small> <br>
-                    <select style="width: 100%;" name="" id="" class="productslist form-control"></select>
-                </div>
+            <div id="item-data-sc" class="table-responsive item-data-sc" style="height: 75vh; overflow-y: scroll;">
+                
+
                 <table class="table table-bordered">
                     <thead>
                     <tr class="">
@@ -150,52 +194,53 @@
 
 
             </div>
+            <div class="">
+
+                <div class="borders shadow bg-white p-2 rounded">
+                    <div class="table-responsive d-flex justify-content-between">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tbody>
+                            <tr hidden>
+                                <td></td>
+                                <td></td>
+                                <td class="text-right"><strong>Sub Total</strong></td>
+                                <td><span id="subtotal">0.00</span></td>
+                            </tr>
+                            <tr hidden>
+                                <td></td>
+                                <td></td>
+                                <td class="text-right"><strong>Discount</strong></td>
+                                <td><input autocomplete="off" class="form-control" id="discount" value="0" type="text"></td>
+                            </tr>
+                            <tr hidden>
+                                <td></td>
+                                <td></td>
+                                <td class="text-right"><strong>Shipping</strong></td>
+                                <td><input autocomplete="off" class="form-control" id="shipping" value="0" type="text"></td>
+                            </tr>
+                            <tr>
+                                <!-- <td><strong>Total Qty: </strong><span id="totalQty" style="color: red; font-weight: bold">0</span></td> -->
+        
+                                <td class="text-right"><h4>Total: <span id="grandTotal" style="color:red">0</span></h4></td>
+                            </tr>
+        
+        
+                            </tbody>
+                        </table>
+                        <div class="">
+        
+                            <a id="create-invoice" href="javascript:;" title="Create Invoice" class="btn btn-primary w-100 h-100" id="load" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Processing Order">Valider</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
 
     <!-- bon billing -->
-    <div class="container fixed-bottom">
-
-        <div class="borders shadow bg-white p-2 rounded">
-            <div class="table-responsive d-flex justify-content-between">
-                <table class="table table-bordered">
-                    <thead>
-                    <tbody>
-                    <tr hidden>
-                        <td></td>
-                        <td></td>
-                        <td class="text-right"><strong>Sub Total</strong></td>
-                        <td><span id="subtotal">0.00</span></td>
-                    </tr>
-                    <tr hidden>
-                        <td></td>
-                        <td></td>
-                        <td class="text-right"><strong>Discount</strong></td>
-                        <td><input autocomplete="off" class="form-control" id="discount" value="0" type="text"></td>
-                    </tr>
-                    <tr hidden>
-                        <td></td>
-                        <td></td>
-                        <td class="text-right"><strong>Shipping</strong></td>
-                        <td><input autocomplete="off" class="form-control" id="shipping" value="0" type="text"></td>
-                    </tr>
-                    <tr>
-                        <!-- <td><strong>Total Qty: </strong><span id="totalQty" style="color: red; font-weight: bold">0</span></td> -->
-
-                        <td class="text-right"><h4>Total: <span id="grandTotal" style="color:red">0</span></h4></td>
-                    </tr>
-
-
-                    </tbody>
-                </table>
-                <div class="">
-
-                    <a id="create-invoice" href="javascript:;" title="Create Invoice" class="btn btn-primary w-100 h-100" id="load" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Processing Order">Valider</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
 
 
@@ -249,7 +294,22 @@
             // get product client id
             let clientid=$('.clientselect').val()
             let [ref, car, p, stock, productid, remise, prnet]=$(this).val().split('§')
-            console.log(clientid, productid)
+            let ids = $('.productid').map(function() {
+                return parseInt($(this).val());
+            }).get();
+            console.log('>> ids', ids, productid)
+            if (ids.includes(parseInt(productid))){
+                alertify.error('Produit déja ajouté')
+                return
+            }
+            // get outs to choose the price
+            $.get('/product/getoutsofproduct', {'id':productid, 'clientid':clientid}, (data)=>{
+                $('.outs').html(data)
+                // $('.addstock').text('stock: '+data.stock)
+                // $('.addprice').text('P.achat: '+data.price)
+                // $('.addpriceinp').attr('min', data.prnet)
+                // $('.addprnet').text('P.Net: '+data.prnet)
+            })
             // get client price
             $.get('/product/getclientprice',
             {clientid:clientid, productid:productid},
@@ -351,10 +411,10 @@
 
 
             $('#create-invoice').on('click', function () {
-								if ($('.clientselect').val()=="" || $('.dateavoir').val()==""){
-									alertify.error('Client/date')
-									return
-								}
+                if ($('.clientselect').val()=="" || $('.dateavoir').val()==""){
+                    alertify.error('Client/date')
+                    return
+                }
                 if (($.inArray(true, $('.price').map((t, i)=>$(i).val()=="")) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()=="")) !== -1) || ($.inArray(true, $('.price').map((t, i)=>$(i).val()==0)) !== -1)||($.inArray(true, $('.qty').map((t, i)=>$(i).val()==0)) !== -1)) {
 
                     showerror();
@@ -382,7 +442,7 @@
                 console.log(items)
                 $.post("{% url 'sales:generateavoir' %}", {
                         customer: $('.clientselect').val(),
-												dateavoir:$('.dateavoir').val(),
+                        dateavoir:$('.dateavoir').val(),
                         total: parseFloat($('#grandTotal').text()),
                         items: JSON.stringify(items),
                         'csrfmiddlewaretoken': '{{ csrf_token }}'

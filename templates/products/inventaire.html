@@ -37,29 +37,29 @@
             <strong class="text-center">Inventaire des <strong class="categoryholder"></strong> </strong>
             <strong class="currentdate"></strong>
         </div>
-        <table class="table table-bordered h6" style="font-size: 11px;">
+        <table class="table table-bordered h6" style="font-size: 15px;">
             <thead>
                 <th>
                     Ref
                 </th>
                 <th>Designation</th>
                 <th>Stock</th>
+                <th>Prix pondiré</th>
+                <th>total</th>
             </thead>
             <tbody class="inventaire">
-                {% for i in products %}
+                
+            </tbody>
+            <tfoot>
                 <tr>
-                    <td>
-                        {{i.ref}}
+                    <td colspan="4" class="text-end">
+                        <strong>Total</strong>
                     </td>
-                    <td>
-                        {{i.car}}
-                    </td>
-                    <td>
-                        {{i.stock |floatformat:-2}}
+                    <td class="totalstockvalue">
+                        0.00
                     </td>
                 </tr>
-                {% endfor %}
-            </tbody>
+            </tfoot>
         </table>
     </div>
 </div>
@@ -83,6 +83,7 @@
             },
             success: function(data){
                 $('.inventaire').html(data.data);
+                $('.totalstockvalue').text(data.totalstockvalue);
             }
         })
     })

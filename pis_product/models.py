@@ -212,7 +212,8 @@ class Product(models.Model):
     def getsimillars(self):
         originref=self.ref.split()[0]
         return Product.objects.exclude(id=self.id).filter(category=self.category).filter(ref__startswith=originref).exclude(stock=0)
-
+    def stockvalue(self):
+        return round(self.pondire*self.stock, 2)
     # def getprices(self):
     #     prices=json.loads(self.prices)
     #     filtered_prices = [item for item in prices[1:] if float(item[1]) != 0]

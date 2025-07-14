@@ -409,11 +409,13 @@ def inventaire(request):
                 products=Product.objects.filter(category_id=id, stock__gt=0).order_by('ref')
             else:
                 products=Product.objects.filter(category_id=id).order_by('ref')
-        trs=''
-        for i in products:
-            trs+=f'<tr><td>{i.ref}</td><td>{i.car}</td><td>{int(i.stock)}</td></tr>'
+        totalstockvalue=round(sum([i.stockvalue() for i in products]), 2)
+        # trs=''
+        # for i in products:
+        #     trs+=f'<tr><td>{i.ref}</td><td>{i.car}</td><td>{int(i.stock)}</td></tr>'
         return JsonResponse({
-            'data':trs
+            'data':render(request, 'products/inventaire_table.html', {'products':products}).content.decode('utf-8'),
+            'totalstockvalue':totalstockvalue
         })
 
     ctx={
@@ -3380,16 +3382,16 @@ def getproductdata(request):
     facture=request.GET.get('facture')=='1'
     product=Product.objects.get(pk=id)
     lowprice=0.00
-    stockin=StockIn.objects.filter(product_id=id, avoir_reciept=None).order_by('price').first()
-    if stockin:
-        lowprice=stockin.price
+    stockin=StockIn.objects.filter(product_id=id, avoir_reciept=None).order_by('price')
+    if stockin.first():
+        lowprice=stockin.first().price
     clientid=request.GET.get('clientid')    
     clientprice=0.00
-    ll=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=id).last()
+    stockout=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=id)
     clientprice=0.00
-    if ll:
-        print('>> ll', ll)
-        clientprice=float(ll.price)
+    if stockout.last():
+        print('>> stockout', stockout)
+        clientprice=float(stockout.last().price)
     return JsonResponse({
         'stock':float(product.stockfacture) if facture else float(product.stock),
         'price':product.pr_achat,
@@ -3400,6 +3402,14 @@ def getproductdata(request):
         'clientprice':clientprice,
     })
 
+def getoutsofproduct(request):
+    id=request.GET.get('id')
+    
+    clientid=request.GET.get('clientid')
+    stockout=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=id).order_by('-invoice__datebon')[:50]
+    return render(request, 'products/productouts.html', {
+        'stockout':stockout
+    })
 def updatestockcontoir(request):
     productid=request.GET.get('productid')
     qty=float(request.GET.get('qty'))
@@ -3777,6 +3787,8 @@ def addcategoryajax(request):
             'success':False,
             'error':'Cette categorie existe deja'
         })
+    print('>> not exist create, create it')
+    # create the category
     category=Category.objects.create(name=category, parent_id=1)
     return JsonResponse({
         'success':True,

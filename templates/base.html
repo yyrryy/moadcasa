@@ -500,10 +500,9 @@ table{
              {{ request.user.retailer_user.retailer.name }} {% if  user.groups.all.0.name == 'account' %}-Facturation{% endif %}
           </div>
             <!-- <div>
-              {{title}}
             </div> -->
             <div>
-              {% now "d/m/Y" %}
+              {{title}} - {% now "d/m/Y" %}
             </div>
             <div class="d-flex">
               
@@ -703,28 +702,17 @@ table{
               </ul>
 
        </div>
-       <div class="mt-auto">
-        Version: 1.2.0 
-        <div >
-
-          @Adachi Systems <i type="button" class="fa fa-phone fa-lg p-2"  onclick="$('.adachiinfo').toggleClass('d-none')"></i>
-          
-        </div>
-        <div class="p-2 border adachiinfo d-none">
-          Abdelwahed <br>
-          06 88 52 43 20
-        </div>
-    </div>
+       
       </div>
   </div>
 
   <section class="wrapper" style="width:100%;height: 92vh; overflow-y: scroll; position: relative; overflow-x: hidden;">
       
-      <div class="text-center" style="
+      <!-- <div class="text-center" style="
       color: #ffffff;
     font-weight: bold;
     background: #131d46;
-  ">{{title.upper}}</div>
+  ">{{title.upper}}</div> -->
   <div class="px-2">
 
     {% block content %}{% endblock %}
@@ -755,7 +743,10 @@ table{
 
 Version: 1.3.0 
 
-@Adachi Systems 
+@Adachi Systems <i type="button" class="fa fa-phone fa-lg p-2"  onclick="$('.adachiinfo').toggleClass('d-none')"></i> <span class="p-2 border adachiinfo d-none">
+  Abdelwahed
+  06 88 52 43 20
+</span>
 
 <!-- modals -->
 <!-- modal update products -->
@@ -1236,6 +1227,23 @@ Version: 1.3.0
 
 
 <script>
+  function populateavoirclient(event){
+    tr=$(event.target).closest('tr')
+    priceofout=tr.find('.priceofout').text()
+    qtyofout=tr.find('.qtyofout').text()
+    console.log('>> price', priceofout, qtyofout, tr)
+    // get the first tr in  .itemsbon
+    firsttr=$('.itemsbon tr').first()
+    // set the value of the first tr in .itemsbon
+    firsttr.find('.stock').text(qtyofout)
+    firsttr.find('.price').val(priceofout)
+  }
+  function bondata(id){
+        $('.bondataholder').removeClass('d-none')
+        $.post("{% url 'product:bondata' %}",{id:id},function(data){
+            $('.bondata').html(data.data)
+        })
+    }
   function checkformode(event){
     if ($('.mode').val()=='cheque' || $('.mode').val()=='effet'){
       console.log('echeance')
@@ -1717,7 +1725,9 @@ let inactivityTime=0;
         }
         $.get("{% url 'product:addcategoryajax' %}",{'category': category},(data)=>{
                 if (data.success){
-                    $('[name="category"]').append(`<option value="${data.id}">${category.toUpperCase()}</option>`)
+                  $('[name="categoryinadd"]').append(`<option value="${data.id}">${category.toUpperCase()}</option>`)
+                  $('[name="categoryinadd"]').val(data.id)
+                  $('[name="category"]').append(`<option value="${data.id}">${category.toUpperCase()}</option>`)
                     $('[name="category"]').val(data.id)
                     $('.addcategory').toggleClass('d-none')
                     $('.addcategoryinput').val('')
