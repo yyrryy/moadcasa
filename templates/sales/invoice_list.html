@@ -100,12 +100,12 @@ $('#invoice').on('click', function() {
             alertify.error('Annuler')
         })
     }
-    function bondata(id){
-        $('.bondataholder').removeClass('d-none')
-        $.post("{% url 'product:bondata' %}",{id:id},function(data){
-            $('.bondata').html(data.data)
-        })
-    }
+    // function bondata(id){
+    //     $('.bondataholder').removeClass('d-none')
+    //     $.post("{% url 'product:bondata' %}",{id:id},function(data){
+    //         $('.bondata').html(data.data)
+    //     })
+    // }
     function deleteFunction(e) {
         c=confirm("Supprimer ?");
         if (c==true){

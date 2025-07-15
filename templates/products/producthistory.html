@@ -468,13 +468,13 @@
             $('.bondata').html(data.data)
         })
     }
-    const bondata=(id)=>{
-        $('.bondata').html('<div class="spinner-grow text-primary" role="status"><span class="sr-only">Loading...</span></div>')
-        $('.bondataholder').removeClass('d-none')
-        $.post("{% url 'product:bondata' %}",{id:id},function(data){
-            $('.bondata').html(data.data)
-        })
-    }
+    // const bondata=(id)=>{
+    //     $('.bondata').html('<div class="spinner-grow text-primary" role="status"><span class="sr-only">Loading...</span></div>')
+    //     $('.bondataholder').removeClass('d-none')
+    //     $.post("{% url 'product:bondata' %}",{id:id},function(data){
+    //         $('.bondata').html(data.data)
+    //     })
+    // }
 
     qtyinp=$('[name="qtyinp"]')
     $('.retourbtn').each((i, el)=>{
