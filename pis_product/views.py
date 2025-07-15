@@ -3649,7 +3649,7 @@ def makeecheanceclientcash(request):
     echeance.save()
     retailer=Retailer.objects.get(pk=1)
     amount=echeance.amount
-    raison=f'payment espece {echeance.mode} {echeance.npiece} - {echeance.supplier.name}'
+    raison=f'payment espece {echeance.mode} {echeance.npiece} - {echeance.client.customer_name}'
     retailer.caisseexterieur=float(retailer.caisseexterieur)+float(amount)
     retailer.save()
     Outcaisseext.objects.create(
