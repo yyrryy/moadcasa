@@ -167,7 +167,7 @@
                     </thead>
                     <tbody>
                         {% for bon in bons %}
-                        <tr onclick="bondata({{bon.id}})" style="cursor: pointer;">
+                        <tr onclick="bonachatdata({{bon.id}})" style="cursor: pointer;">
                             <td>{{bon.bondate|date:'d/m/Y'}}</td>
                             <td>{{bon.nbon}}</td>
                             <td>{{bon.total|floatformat:2}}</td>
@@ -304,15 +304,7 @@
         date=$('.filterdate').text().split(' - ')
         window.location.href = "{% url 'product:relvesupp' %}?start="+date[0]+"&end="+date[1]+"&supplier="+{{supplier.id}}
     })
-    const bondata=(id)=>{
-        $('.bondataholder').removeClass('d-none')
-        $.post(`/product/bonentree/${id}`,{
-            'csrfmiddlewaretoken':'{{csrf_token}}'
-        },
-        function(data){
-            $('.bondata').html(data.data)
-        })
-    }
+    
 
 // serch in tables instead of sending ajax request
         $(".name_search").on("keyup", function() {
