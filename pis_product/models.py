@@ -213,6 +213,7 @@ class Product(models.Model):
         originref=self.ref.split()[0]
         return Product.objects.exclude(id=self.id).filter(category=self.category).filter(ref__startswith=originref).exclude(stock=0)
     def stockvalue(self):
+        print(self.pondire, self.pr_achat, self.stock, int(self.pondire)==0)
         if int(self.pondire)==0:
             return round(self.pr_achat*self.stock, 2)
         return round(self.pondire*self.stock, 2)
