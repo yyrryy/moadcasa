@@ -1784,6 +1784,7 @@ def updateproduct(request, id):
         car = request.POST.get('updatecar')
         minstock = request.POST.get('updateminstock')
         price = request.POST.get('updatepricemag')
+        price2 = request.POST.get('updateprice2')
         pricevente = request.POST.get('updatepricegro')
         #prachat = request.POST.get('updatepr_achat')
         #remise=request.POST.get('updateremise')
@@ -1807,6 +1808,7 @@ def updateproduct(request, id):
             product.ref=ref
             product.prvente=pricevente
             product.price=price
+            product.price2=price2
             product.car=car
             product.minstock=minstock
             product.mark=mark
@@ -2645,12 +2647,14 @@ def supplierinfo(request, id):
     totalavoirs=avoirs.aggregate(total=Sum('total'))['total'] or 0
     nbrbons=bons.count()
     paymentscount=payments.count()
+    print('>>', Product.objects.filter(
+        originsupp=supplier, stock__gt=0
+    ))
     supplierCurrentValue = Product.objects.filter(
         originsupp=supplier, stock__gt=0
     ).aggregate(total_value=Sum(F('prnet') * F('stock')))['total_value'] or 0
     return render (request, 'products/supplierinfo.html', {
         'title':supplier.name.upper()+' Situation',
-        'bons':bons,
         'bons':bons,
         'nbrbons':nbrbons,
         'supplier':supplier,
@@ -3399,6 +3403,7 @@ def getproductdata(request):
         'lowpriceachat':lowprice,
         'prixgro':product.prvente,
         'prixcomptoir':float(product.price),
+        'prixmagazin':float(product.price2),
         'clientprice':clientprice,
     })
 

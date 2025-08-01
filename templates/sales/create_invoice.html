@@ -104,15 +104,20 @@
     
                 <div class="col-md-6 mb-3 productslistholder position-relative  d-none">
                     <div class="d-flex">
-                        <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
+                        <!-- <button class="btn btn-success" onclick="$('.addproductholder').removeClass('d-none')">
                             +
-                        </button>
-                        <select name="" id="" class="productslist form-control" style="width: 100%;"></select>
-                        <div class="p-2 col-4">
+                        </button> -->
+                        <div class="col-6">
+                            <select name="" id="" class="productslist form-control" style="width: 100%;"></select>
+                        </div>
+                        <div class="p-2 col-4 border ms-3">
                             Prix Gro: <strong class="prixgro"></strong>
                         </div>
-                        <div class="p-2 col-4">
+                        <div class="p-2 col-4 border ms-3">
                             Prix Comptoir: <strong class="prixcomptoir"></strong>
+                        </div>
+                        <div class="p-2 col-4 border ms-3">
+                            Prix magazin: <strong class="prixmagazin"></strong>
                         </div>
                             
                     </div>
@@ -408,7 +413,7 @@
         $(function(){
             $('.productslist').select2({
                 minimumInputLength: 1,
-                placeholder:'Chercher',
+                placeholder:'Chercher Article',
                 ajax: {
                 type:'get',
                 dataType: 'json',
@@ -449,6 +454,7 @@
                     $('.clientprice').text(data.clientprice);
                     $('.prixgro').text(data.prixgro);
                     $('.prixcomptoir').text(data.prixcomptoir);
+                    $('.prixmagazin').text(data.prixmagazin);
                     thisprice=data.clientprice
                     row={
                 'article':ref+' - '+car,
