@@ -1970,7 +1970,7 @@ def reports(request):
         pass
     # Calculate total stock value for all suppliers
     soldsuppliers = sum([supplier.rest for supplier in Supplier.objects.all()])
-    stockgeneral = sum(s.stockvalue() for s in Product.objects.filter(stock__gt=0))
+    stockgeneral = sum(s.stockvalue() for s in Product.objects.all())
     clients=Customer.objects.all()
     bons=0
     avoirs=0
