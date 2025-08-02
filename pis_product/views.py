@@ -1969,7 +1969,7 @@ def reports(request):
         # return render(request, 'products/nopermission.html')
         pass
     # Calculate total stock value for all suppliers
-    soldsuppliers = sum(supplier.sold() for supplier in Supplier.objects.all())
+    soldsuppliers = sum([supplier.rest for supplier in Supplier.objects.all()])
     stockgeneral = sum(s.stockvalue() for s in Product.objects.filter(stock__gt=0))
     clients=Customer.objects.all()
     bons=0
