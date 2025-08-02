@@ -1970,7 +1970,7 @@ def reports(request):
         pass
     # Calculate total stock value for all suppliers
     soldsuppliers = sum(supplier.sold() for supplier in Supplier.objects.all())
-    stockgeneral = sum(s.totalstock() for s in Supplier.objects.all())
+    stockgeneral = sum(s.stockvalue() for s in Product.objects.filter(stock__gt=0))
     clients=Customer.objects.all()
     bons=0
     avoirs=0
@@ -2579,9 +2579,9 @@ def bonsentrees(request):
             # return render(request, 'products/nopermission.html')
             pass
     if facture:
-        bb=Itemsbysupplier.objects.filter(isfacture=True).order_by('-bondate')
+        bb=Itemsbysupplier.objects.filter(isfacture=True).order_by('-nbon')
     else:
-        bb=Itemsbysupplier.objects.all().order_by('-bondate')
+        bb=Itemsbysupplier.objects.all().order_by('-nbon')
     return render(request, 'products/supplierslist.html', {
         'title':'Liste Bons Fournisseurs',
         'bonslist':bb,

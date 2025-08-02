@@ -35,7 +35,7 @@
             {{item.stock|floatformat:-2}}
         </b>
     </td>
-    <td class="pondire" suppid="{{item.originsupp.id}}">
+    <td hidden class="pondire" suppid="{{item.originsupp.id}}">
       <b>
         {{ item.pondire }}
       </b>
@@ -84,6 +84,11 @@
     <td class="product_price">
         <b>
             {{item.price}}
+        </b>
+    </td>
+    <td class="prricemagazin">
+        <b>
+            {{item.price2}}
         </b>
     </td>
     
