@@ -2000,7 +2000,7 @@ def reportnetprofit(request):
         ).aggregate(
         total=Sum('grand_total')
     )['total'] or 0, 2)
-    achats=round(Itemsbysupplier.objects.filter(dated_order__range=[datefrom, dateto]
+    achats=round(Itemsbysupplier.objects.filter(bondate__range=[datefrom, dateto]
         ).aggregate(
             total_cost=Sum(('total'))
         )['total_cost'] or 0, 2)
