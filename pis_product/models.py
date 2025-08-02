@@ -215,9 +215,9 @@ class Product(models.Model):
     def stockvalue(self):
         if int(self.stock)<0:
             return 0.00
-        if int(self.pondire)==0:
-            return round(self.pr_achat*self.stock, 2)
-        return round(self.pondire*self.stock, 2)
+        # if int(self.pondire)==0:
+        #     return round(self.pr_achat*self.stock, 2)
+        return round(self.pr_achat*self.stock, 2)
     # def getprices(self):
     #     prices=json.loads(self.prices)
     #     filtered_prices = [item for item in prices[1:] if float(item[1]) != 0]
