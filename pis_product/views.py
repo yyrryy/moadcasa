@@ -2505,7 +2505,10 @@ def addsupply(request):
                 newnet=round(float(i['price'])-((float(i['price'])*remise)/100), 2)
                 print('oldnet, newnet', product.prnet, newnet)
                 totalqtys=int(product.stock)+int(i['qty'])
-                actualtotal=float(product.prnet)*float(product.stock)
+                if product.pondire>0:
+                    actualtotal=float(product.pondire)*float(product.stock)
+                else:
+                    actualtotal=float(product.prnet)*float(product.stock)
                 totalprices=round((float(i['qty'])*newnet)+actualtotal, 2)
                 pondire=round(totalprices/totalqtys, 2)
                 #print(f'ttalqtys {totalqtys}, totalprices {totalprices}, pondire {pondire}')
