@@ -158,7 +158,7 @@ class HomePageView(ListView):
             total_sales=Sum('grand_total')
         )
 
-        today_sales = SalesHistory.objects.filter(customer=None, datebon__date=timezone.now().date()).aggregate(total_sales=Sum('grand_total'))['total_sales'] or 0
+        today_sales = SalesHistory.objects.filter(customer=None, datebon__date=timezone.now()).aggregate(total_sales=Sum('grand_total'))['total_sales'] or 0
         todayreglementespece=PaymentClient.objects.filter(Q(mode='espece')|Q(iscash=True), date__date=timezone.now().date()).aggregate(totalamount=Sum('amount'))['totalamount'] or 0
         
 
