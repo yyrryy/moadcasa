@@ -142,14 +142,19 @@
             </div> -->
         </div>
     </div>
-    <div class="row col-md-9">
+    <div class="col-md-9">
         <!-- <br>
         <button type="button" class="btn btn-success addoneproduct" data-bs-toggle="modal" data-bs-target="#exampleModal">
             Ajouter+
         </button>
         <br><br><br> -->
+        <div>
+            <button class="btn switcher btn-dark" onclick="$('.switcher').removeClass('btn-dark'), $(this).addClass('btn-dark'), $('.toshow').hide(), $('.bons').show()">bons</button>
+            <button class="btn switcher" onclick="$('.switcher').removeClass('btn-dark'), $(this).addClass('btn-dark'), $('.toshow').hide(), $('.reglements').show()">Reglements</button>
+            <button class="btn switcher" onclick="$('.switcher').removeClass('btn-dark'), $(this).addClass('btn-dark'), $('.toshow').hide(), $('.avoirs').show()">Avoirs</button>
+        </div>
         <!-- bons -->
-        <div class="col-md-6">
+        <div class="bons toshow">
             <div class="bg-white shadow rounded p-2">
                 <div class="d-flex justify-content-between align-items-center">
                     <h4>Bon</h4>
@@ -179,7 +184,7 @@
         </div>
 
         <!-- payments -->
-        <div class="col-md-6">
+        <div class="reglements toshow" style="display: none;">
             <div class="bg-white shadow rounded p-2">
                 <div class="p-2 d-flex justify-content-between align-items-center">
                     <h4>Les paiments</h4>
@@ -214,7 +219,12 @@
                                 {% else %}
                                 {{bon.echeance|date:'d/m/Y'}}
                                 {% endif %}
-                                <button class="btn btn-danger d-none deletereglsupp{{bon.id}}" ondblclick="deletereglsupp('{{bon.id}}')"></button>
+                                <button class="btn btn-danger d-none deletereglsupp{{bon.id}}" onclick="$('.confirmdeleteregl').toggleClass('d-none')"></button><br>
+                                <div class="confirmdeleteregl d-none">
+                                    Supprimer ?
+                                    <button onclick="$('.confirmdeleteregl , .deletereglsupp{{bon.id}}').toggleClass('d-none')">Non</button>
+                                    <button onclick="deletereglsupp('{{bon.id}}')">OUI</button>
+                                </div>
                             </td>
 
                         </tr>
@@ -225,7 +235,7 @@
         </div>
 
         <!-- avoirs -->
-        <div class="mt-2">
+        <div class="avoirs toshow" style="display: none;">
             <div class="bg-white rounded shadow p-2">
                 <div class="p-2 d-flex justify-content-between align-items-center">
                     <h4>Les avoirs</h4>
@@ -302,7 +312,7 @@
         //     }
         // )
         date=$('.filterdate').text().split(' - ')
-        window.location.href = "{% url 'product:relvesupp' %}?start="+date[0]+"&end="+date[1]+"&supplier="+{{supplier.id}}
+        window.location.href = "{% url 'product:relvesupp' %}?start="+date[0]+"&end="+date[1]+"&supplier="+"{{supplier.id}}"
     })
     
 
