@@ -657,7 +657,7 @@ def relvesupp(request):
     avoirs=Avoirsupp.objects.filter(supplier_id=supplierid, date__range=[startdate, enddate])
     reglementsbl=PaymentSupplier.objects.filter(supplier_id=supplierid, date__range=[startdate, enddate])
 
-    bons=Itemsbysupplier.objects.filter(supplier_id=supplierid, bondate__range=[startdate, enddate])
+    bons=Itemsbysupplier.objects.filter(supplier_id=supplierid, bondate__range=[startdate, enddate], isfacture=False)
     totalbons=bons.aggregate(total=Sum('total'))['total'] or 0
     totalregl=reglementsbl.aggregate(total=Sum('amount'))['total'] or 0
     totalavoirs=avoirs.aggregate(total=Sum('total'))['total'] or 0
@@ -2281,9 +2281,9 @@ def supply(request):
             pass
     cc = Category.objects.filter(children__isnull=True).order_by('name')
     facture=request.GET.get('facture')=="1"
-
+    title=f'+{"Facture" if facture else "Bon"} achat'
     ctx={
-        'title':'+ Bon achat',
+        'title':title,
         'children':cc,
         'suppliers':Supplier.objects.all(),
         'marks':Mark.objects.all(),
@@ -2489,65 +2489,66 @@ def addsupply(request):
             'success':False,
             'error':'Bon avec ce numero existe deja'
         })
-    supplier.total=float(request.POST.get('total'))+float(supplier.total)
-    supplier.rest=float(request.POST.get('total'))+float(supplier.rest)
-    supplier.save()
+    
     reciept=Itemsbysupplier.objects.create(supplier=supplier, total=float(request.POST.get('total')), nbon=nbon, rest=float(request.POST.get('total')), bondate=bondate, isfacture=facture)
     with transaction.atomic():
         for i in items:
-
             item=i.get('item_id')
             remise=float(i.get('remise') or 0)
             product = Product.objects.get(pk=item)
             # if there is alrady stock, calculate cout pondire
-            if product.stock > 0:
-            # sum of all qty / qty*prices
-                newnet=round(float(i['price'])-((float(i['price'])*remise)/100), 2)
-                print('oldnet, newnet', product.prnet, newnet)
-                totalqtys=int(product.stock)+int(i['qty'])
-                if product.pondire>0:
-                    actualtotal=float(product.pondire)*float(product.stock)
-                else:
-                    actualtotal=float(product.prnet)*float(product.stock)
-                totalprices=round((float(i['qty'])*newnet)+actualtotal, 2)
-                pondire=round(totalprices/totalqtys, 2)
-                #print(f'ttalqtys {totalqtys}, totalprices {totalprices}, pondire {pondire}')
-                # assign pondire with 35%
-                #product.pondire=round((pondire*100)/65, 2)
-                product.pondire=pondire
             
-            prices=json.loads(product.prices)
-
-            prices.append([f'{supplier.name} - {reciept.nbon}', bondate, float(i['price']), float(i['qty'])])
-           
-            product.pr_achat=float(i['price'])
-            prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
-            product.prnet=prnet
-            product.remise=remise
-            
-            product.prices=json.dumps(prices)
-            product.command=False
-            product.originsupp=supplier
-            product.supplier=None
-            print('>>>> prices', i['prventmag'], i['prventgro'])
-            # if int(i['prventmag'])>0:
-            #     product.price=i['prventmag']
-            # if int(i['prventgro'])>0:
-            #     product.prvente=i['prventgro']
-            print('>> price', i['price'])
-            StockIn.objects.create(
-                product=product,
-                quantity=float(i['qty']),
-                # this used to be captering the price for each item entered
-                price=float(i['price']),
-                total=float(i['total']),
-                remise=remise,
-                reciept=reciept
-            )
             if facture:
                 product.stockfacture=float(product.stockfacture)+float(i['qty'])
             else:
                 product.stock=float(product.stock)+float(i['qty'])
+                if product.stock > 0:
+                # sum of all qty / qty*prices
+                    newnet=round(float(i['price'])-((float(i['price'])*remise)/100), 2)
+                    print('oldnet, newnet', product.prnet, newnet)
+                    totalqtys=int(product.stock)+int(i['qty'])
+                    if product.pondire>0:
+                        actualtotal=float(product.pondire)*float(product.stock)
+                    else:
+                        actualtotal=float(product.prnet)*float(product.stock)
+                    totalprices=round((float(i['qty'])*newnet)+actualtotal, 2)
+                    pondire=round(totalprices/totalqtys, 2)
+                    #print(f'ttalqtys {totalqtys}, totalprices {totalprices}, pondire {pondire}')
+                    # assign pondire with 35%
+                    #product.pondire=round((pondire*100)/65, 2)
+                    product.pondire=pondire
+                
+                prices=json.loads(product.prices)
+
+                prices.append([f'{supplier.name} - {reciept.nbon}', bondate, float(i['price']), float(i['qty'])])
+            
+                product.pr_achat=float(i['price'])
+                prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
+                product.prnet=prnet
+                product.remise=remise
+                
+                product.prices=json.dumps(prices)
+                product.command=False
+                product.originsupp=supplier
+                product.supplier=None
+                print('>>>> prices', i['prventmag'], i['prventgro'])
+                # if int(i['prventmag'])>0:
+                #     product.price=i['prventmag']
+                # if int(i['prventgro'])>0:
+                #     product.prvente=i['prventgro']
+                print('>> price', i['price'])
+                StockIn.objects.create(
+                    product=product,
+                    quantity=float(i['qty']),
+                    # this used to be captering the price for each item entered
+                    price=float(i['price']),
+                    total=float(i['total']),
+                    remise=remise,
+                    reciept=reciept
+                )
+                supplier.total=float(request.POST.get('total'))+float(supplier.total)
+                supplier.rest=float(request.POST.get('total'))+float(supplier.rest)
+                supplier.save()
             product.save()
             originref=product.ref.split(' ')[0]
             simillar = Product.objects.filter(category=product.category.id).filter(Q(ref__startswith=originref+' ') | Q(ref=originref))
@@ -2643,16 +2644,14 @@ def supplierinfo(request, id):
     supplier=Supplier.objects.get(pk=id)
     payments=PaymentSupplier.objects.filter(supplier=supplier).order_by('-date')[:30]
     nbrpayments=payments.count()
-    totalpayments=payments.aggregate(total=Sum('amount'))['total'] or 0
-    bons=Itemsbysupplier.objects.filter(supplier=supplier).order_by('-bondate')[:30]
+    totalpayments=PaymentSupplier.objects.filter(supplier=supplier).aggregate(total=Sum('amount'))['total'] or 0
+    bons=Itemsbysupplier.objects.filter(supplier=supplier, isfacture=False).order_by('-bondate')[:30]
+    totalbons=Itemsbysupplier.objects.filter(supplier=supplier, isfacture=False).aggregate(total=Sum('total'))['total'] or 0
     avoirs=Avoirsupp.objects.filter(supplier=supplier)[:30]
     navoirs=avoirs.count()
-    totalavoirs=avoirs.aggregate(total=Sum('total'))['total'] or 0
+    totalavoirs=Avoirsupp.objects.filter(supplier=supplier).aggregate(total=Sum('total'))['total'] or 0
     nbrbons=bons.count()
     paymentscount=payments.count()
-    print('>>', Product.objects.filter(
-        originsupp=supplier, stock__gt=0
-    ))
     supplierCurrentValue = Product.objects.filter(
         originsupp=supplier, stock__gt=0
     ).aggregate(total_value=Sum(F('prnet') * F('stock')))['total_value'] or 0
@@ -2668,7 +2667,8 @@ def supplierinfo(request, id):
         'avoirs':avoirs,
         'navoirs':navoirs,
         'totalavoirs':totalavoirs,
-        'currentvalue':supplierCurrentValue
+        'currentvalue':supplierCurrentValue,
+        'totalbons':totalbons
 
     })
 
