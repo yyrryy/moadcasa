@@ -156,20 +156,7 @@
                 </form>
             </div>
         </div>
-        <table class="table" style="font-size: 13px;">
-
-            {% for i in clientpayments %}
-            <tr>
-                <td>
-                    {% if i.isfacture %}(FC){% endif %}
-                </td>
-                <td> {{i.created_at|date:"d/m/Y"}}</td>
-                <td>{{i.echeance|date:"d/m/Y"}}</td>
-                <td>{{i.mode}}</td>
-                <td>{{i.amount|floatformat:2}} DH</td>
-            </tr>
-            {% endfor %}
-        </table>
+        
     </div>
     <!-- payments modal -->
     <div class="modal fade" id="paymentsclientmodal" tabindex="-1" aria-labelledby="editclientmodalLabel" aria-hidden="true">
@@ -217,8 +204,13 @@
         </div>
     </div>
     <!-- bon sortie -->
-    <div class="col-md-9 row">
-        <div class="col-md-6">
+    <div class="col-md-9">
+        <div>
+            <button class="btn switcher btn-dark" onclick="$('.switcher').removeClass('btn-dark'), $(this).addClass('btn-dark'), $('.toshow').hide(), $('.bons').show()">bons</button>
+            <button class="btn switcher" onclick="$('.switcher').removeClass('btn-dark'), $(this).addClass('btn-dark'), $('.toshow').hide(), $('.reglements').show()">Reglements</button>
+            <button class="btn switcher" onclick="$('.switcher').removeClass('btn-dark'), $(this).addClass('btn-dark'), $('.toshow').hide(), $('.avoirs').show()">Avoirs</button>
+        </div>
+        <div class="bons toshow">
             <div class="shadow rounded p-2" style="background: rgba(201, 255, 202, 0.323);">
                 <h4 class="p-2 rounded text-white bg-success shadow">
                     <strong>
@@ -261,7 +253,7 @@
             </div>
         </div>
         <!-- bon avoir -->
-        <div class="col-md-6">
+        <div class="avoirs toshow" style="display: none;">
             <div class="shadow rounded p-2" style="background: rgba(255, 180, 180, 0.355);">
                 <h4 class="p-2 rounded text-white bg-danger shadow">
                     <strong>
@@ -299,6 +291,28 @@
             </div>
         </div>
 
+        <div class="reglements toshow" style="display: none;">
+            <table class="table table-bordered table-hover" style="font-size: 13px;">
+                <tr>
+                    <td></td>
+                    <td>Date</td>
+                    <td>echeance</td>
+                    <td>mode</td>
+                    <td>Mantant</td>
+                </tr>
+                {% for i in clientpayments %}
+                <tr>
+                    <td>
+                        {% if i.isfacture %}(FC){% endif %}
+                    </td>
+                    <td> {{i.created_at|date:"d/m/Y"}}</td>
+                    <td>{{i.echeance|date:"d/m/Y"}}</td>
+                    <td>{{i.mode}}</td>
+                    <td>{{i.amount|floatformat:2}} DH</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
 
     </div>
 

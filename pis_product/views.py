@@ -2289,6 +2289,8 @@ def supply(request):
         'marks':Mark.objects.all(),
         'facture':'1' if facture else '0'
     }
+    if facture:
+        return render(request, 'products/supplyfacture.html', ctx)
     return render(request, 'products/supply.html', ctx)
 
 def addproduct(request):
@@ -2393,50 +2395,7 @@ def updatebonachat(request, id):
             #     Supplierprice.objects.create(supplier=newsupplier, product=product, price=float(i['price']), qty=int(i['qty']), remise=remise)
             # if(not float(i['price'])==0):
             # product.pr_achat=float(i['price'])
-            prices=json.loads(product.prices)
-
-            prices.append([f'{newsupplier.name} - {nbon}', bondate, float(i['price']), float(i['qty'])])
-            # update pondire
-
-            # newnet=round(float(i['price'])-((float(i['price'])*int(i['remise']))/100), 2)
-            # print('oldnet, newnet', product.prnet, newnet)
-            # totalqtys=int(product.stock)+int(i['qty'])
-            # actualtotal=float(product.prnet)*float(product.stock)
-            # totalprices=round((float(i['qty'])*newnet)+actualtotal, 2)
-            # pondire=round(totalprices/totalqtys, 2)
-            #print(f'ttalqtys {totalqtys}, totalprices {totalprices}, pondire {pondire}')
-            # assign pondire with 35%
-            #product.pondire=round((pondire*100)/65, 2)
-            # product.pondire=pondire
-
-            #pondir will be calculated in button pondir
-            # qts=0
-            # prcs=0
-            # for b in prices:
-            #     qts+=b[3]
-            #     prcs+=b[2]*b[3]
-            # pondire=round(prcs/qts, 2)
-            # product.pr_achat=pondire
-            # prnet=round(pondire-(pondire*float(remise/100)), 2)
-            # product.prnet=prnet
-            #product.prices=json.dumps(prices)
-            product.remise=remise
-            # if float(product.pr_achat)!=float(i['price']):
-            #     print('not equal')
-            #     prices.append([float(i['price']), float(i['qty'])])
-            #     product.prices=json.dumps(prices)
-            # else:
-            #     print('equal')
-            #     for i, price in enumerate(prices):
-            #         if price[0] == float(i['price']):
-            #             # update the second item in the nested list
-            #             prices[i][1] =float(prices[i][1])+float(i['qty'])
-            #     product.prices=json.dumps(prices)
-            # or get the average pr_achat
-            #product.pr_achat=round((float(product.pr_achat)+float(i['price']))/2, 2)
-            product.command=False
-            product.originsupp=newsupplier
-            product.supplier=None
+            
             StockIn.objects.create(
                 product=product,
                 quantity=float(i['qty']),
@@ -2454,18 +2413,21 @@ def updatebonachat(request, id):
                 product.stockfacture=float(product.stockfacture)+float(i['qty'])
             else:
                 product.stock=float(product.stock)+float(i['qty'])
-            product.pr_achat=float(i['price']) #here
-            prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
-            product.prnet=prnet
-            product.remise=remise
+                product.command=False
+                product.originsupp=newsupplier
+                product.supplier=None
+                product.pr_achat=float(i['price']) #here
+                prnet=round(float(i['price'])-(float(i['price'])*float(remise/100)), 2)
+                product.prnet=prnet
+                product.remise=remise
+                originref=product.ref.split(' ')[0]
+                simillar = Product.objects.filter(category=product.category.id).filter(Q(ref__startswith=originref+' ') | Q(ref=originref))
+                simillar.update(disponibleinother=True)
+                simillar.update(rcommand=False)
+                simillar.update(command=False)
+                simillar.update(supplier=None)
+                simillar.update(commanded=False)
             product.save()
-            originref=product.ref.split(' ')[0]
-            simillar = Product.objects.filter(category=product.category.id).filter(Q(ref__startswith=originref+' ') | Q(ref=originref))
-            simillar.update(disponibleinother=True)
-            simillar.update(rcommand=False)
-            simillar.update(command=False)
-            simillar.update(supplier=None)
-            simillar.update(commanded=False)
 
     ctx={
         'title':'Modifier bon Achat N° '+bon.nbon,
@@ -2497,7 +2459,15 @@ def addsupply(request):
             remise=float(i.get('remise') or 0)
             product = Product.objects.get(pk=item)
             # if there is alrady stock, calculate cout pondire
-            
+            StockIn.objects.create(
+                product=product,
+                quantity=float(i['qty']),
+                # this used to be captering the price for each item entered
+                price=float(i['price']),
+                total=float(i['total']),
+                remise=remise,
+                reciept=reciept
+            )
             if facture:
                 product.stockfacture=float(product.stockfacture)+float(i['qty'])
             else:
@@ -2537,15 +2507,7 @@ def addsupply(request):
                 # if int(i['prventgro'])>0:
                 #     product.prvente=i['prventgro']
                 print('>> price', i['price'])
-                StockIn.objects.create(
-                    product=product,
-                    quantity=float(i['qty']),
-                    # this used to be captering the price for each item entered
-                    price=float(i['price']),
-                    total=float(i['total']),
-                    remise=remise,
-                    reciept=reciept
-                )
+                
                 supplier.total=float(request.POST.get('total'))+float(supplier.total)
                 supplier.rest=float(request.POST.get('total'))+float(supplier.rest)
                 supplier.save()
@@ -2585,7 +2547,7 @@ def bonsentrees(request):
     if facture:
         bb=Itemsbysupplier.objects.filter(isfacture=True).order_by('-nbon')
     else:
-        bb=Itemsbysupplier.objects.all().order_by('-nbon')
+        bb=Itemsbysupplier.objects.filter(isfacture=False).order_by('-nbon')
     return render(request, 'products/supplierslist.html', {
         'title':'Liste Bons Fournisseurs',
         'bonslist':bb,
