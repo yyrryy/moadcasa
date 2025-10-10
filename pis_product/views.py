@@ -127,7 +127,7 @@ def clientpricefc(request):
 def avoirsupdata(request):
     id=request.POST.get('id')
     avoir=Avoirsupp.objects.get(pk=id)
-    items=json.loads(avoir.items)
+    items=PurchasedProduct.objects.filter(avoirsupp=avoir)
     return JsonResponse({
         'data':render(request, 'products/avoirsupdata.html', {'bon':avoir, 'items':items}).content.decode('utf-8')
     })
@@ -511,7 +511,8 @@ def generateavoirsupp(request):
                 avoirsupp=avoir,
                 product=product,
                 quantity=float(i['qty']),
-                #price=float(i['price']),
+                price=float(i['price']),
+                purchase_amount=float(i['total']),
                 isavoirsupp=True,
             )
 

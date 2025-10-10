@@ -72,11 +72,11 @@
                               <tbody class="product-table-body">
                               {% for i in items %}
                               <tr>
-                                  <td>{{i.name}}</td>
+                                  <td>{{i.product.ref}} {{i.product.car}}</td>
                                   <td class="priceholder">{{i.price}}</td>
-                                  <td class="qtyholder">{{i.qty}}</td>
+                                  <td class="qtyholder">{{i.quantity}}</td>
                                   <td class="remiseholder">{{i.remise}}%</td>
-                                  <td class="totalholder">{{i.total}}</td>
+                                  <td class="totalholder">{{i.purchase_amount}}</td>
                                   <!-- <td>
                                       <button class="btn editlinebtn fa fa-edit"  data-bs-toggle="modal" data-bs-target="#updatebonlinemodal" data-itemid="{{i.item_id}}" data-remise="{{i.remise}}" data-qty="{{i.qty}}" data-price="{{i.price}}" data-article="{{i.name}}" data-total="{{i.total}}" title="modifier"></button>
                                   </td> -->
