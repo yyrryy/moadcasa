@@ -71,7 +71,7 @@
                               </thead>
                               <tbody class="product-table-body">
                               {% for i in items %}
-                              <tr>
+                              <tr data-itemid="{{i.id}}">
                                   <td>{{i.product.ref}} {{i.product.car}}</td>
                                   <td class="priceholder">{{i.price}}</td>
                                   <td class="qtyholder">{{i.quantity}}</td>
