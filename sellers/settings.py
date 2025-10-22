@@ -77,26 +77,16 @@ WSGI_APPLICATION = 'sellers.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-in1337 = os.getenv('HOME')=='/home/aaliali'
-print('in1337', os.getenv('HOME'), os.getenv('HOME')=='/home/aaliali')
-if in1337:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'orghdata',        # Replace with your database name
+        'USER': 'postgres',     # Replace with your database user
+        'PASSWORD': 'gadwad123', # Replace with your database password
+        'HOST': 'localhost',         # Or your database server address
+        'PORT': '5432',              # Default PostgreSQL port
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'orghdata',        # Replace with your database name
-            'USER': 'postgres',     # Replace with your database user
-            'PASSWORD': 'gadwad123', # Replace with your database password
-            'HOST': 'localhost',         # Or your database server address
-            'PORT': '5432',              # Default PostgreSQL port
-        }
-    }
+}
 
 
 # Password validation
