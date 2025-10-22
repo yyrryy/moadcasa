@@ -2613,6 +2613,7 @@ def supplierinfo(request, id):
     avoirs=Avoirsupp.objects.filter(supplier=supplier)[:30]
     navoirs=avoirs.count()
     totalavoirs=Avoirsupp.objects.filter(supplier=supplier).aggregate(total=Sum('total'))['total'] or 0
+    sold = totalbons - totalpayments - totalavoirs
     nbrbons=bons.count()
     paymentscount=payments.count()
     supplierCurrentValue = Product.objects.filter(
@@ -2631,8 +2632,8 @@ def supplierinfo(request, id):
         'navoirs':navoirs,
         'totalavoirs':totalavoirs,
         'currentvalue':supplierCurrentValue,
-        'totalbons':totalbons
-
+        'totalbons':totalbons,
+        'sold':sold
     })
 
 def addpaymentsupplier(request, id):
