@@ -2615,6 +2615,7 @@ def supplierinfo(request, id):
     totalavoirs=Avoirsupp.objects.filter(supplier=supplier).aggregate(total=Sum('total'))['total'] or 0
     sold = totalbons - totalpayments - totalavoirs
     nbrbons=bons.count()
+    print('>>> sold', sold, totalbons, totalpayments, totalavoirs)
     paymentscount=payments.count()
     supplierCurrentValue = Product.objects.filter(
         originsupp=supplier, stock__gt=0
