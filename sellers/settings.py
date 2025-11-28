@@ -77,8 +77,8 @@ WSGI_APPLICATION = 'sellers.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-in1337 = os.getenv('HOME')=='/home/aaliali'
-print('in1337', os.getenv('HOME'), os.getenv('HOME')=='/home/aaliali')
+in1337 = os.getenv('DEBUG')=='True'
+print(in1337, os.getenv('DEBUG'), os.getenv('DEBUG')=='True')
 if in1337:
     DATABASES = {
         'default': {

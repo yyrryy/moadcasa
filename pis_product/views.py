@@ -1970,7 +1970,7 @@ def reports(request):
         # return render(request, 'products/nopermission.html')
         pass
     # Calculate total stock value for all suppliers
-    soldsuppliers = sum([supplier.rest for supplier in Supplier.objects.all()])
+    soldsuppliers = sum([supplier.sold() for supplier in Supplier.objects.all()])
     stockgeneral = sum(s.stockvalue() for s in Product.objects.all())
     clients=Customer.objects.all()
     bons=0
@@ -2546,9 +2546,9 @@ def bonsentrees(request):
             # return render(request, 'products/nopermission.html')
             pass
     if facture:
-        bb=Itemsbysupplier.objects.filter(isfacture=True).order_by('-nbon')
+        bb=Itemsbysupplier.objects.filter(isfacture=True).order_by('-bondate')
     else:
-        bb=Itemsbysupplier.objects.filter(isfacture=False).order_by('-nbon')
+        bb=Itemsbysupplier.objects.filter(isfacture=False).order_by('-bondate')
     return render(request, 'products/supplierslist.html', {
         'title':'Liste Bons Fournisseurs',
         'bonslist':bb,
@@ -2615,7 +2615,6 @@ def supplierinfo(request, id):
     totalavoirs=Avoirsupp.objects.filter(supplier=supplier).aggregate(total=Sum('total'))['total'] or 0
     sold = totalbons - totalpayments - totalavoirs
     nbrbons=bons.count()
-    print('>>> sold', sold, totalbons, totalpayments, totalavoirs)
     paymentscount=payments.count()
     supplierCurrentValue = Product.objects.filter(
         originsupp=supplier, stock__gt=0
