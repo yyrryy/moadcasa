@@ -4760,3 +4760,11 @@ def lowpriceachat(request):
     return JsonResponse({
         'price':products.price
     })
+
+def deleteclientpayment(request):
+    id=request.GET.get('id')
+    reglement=PaymentClient.objects.get(pk=id)
+    reglement.delete()
+    return JsonResponse({
+        'success':True
+    })

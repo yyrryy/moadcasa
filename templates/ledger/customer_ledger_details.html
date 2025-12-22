@@ -308,7 +308,11 @@
                     <td> {{i.created_at|date:"d/m/Y"}}</td>
                     <td>{{i.echeance|date:"d/m/Y"}}</td>
                     <td>{{i.mode}}</td>
-                    <td>{{i.amount|floatformat:2}} DH</td>
+                    <td>{{i.amount|floatformat:2}} DH
+                        <button class="btn btn-danger" onclick="deleteclientpayment(event, '{{i.id}}')">
+                            Supprimer
+                        </button>
+                    </td>
                 </tr>
                 {% endfor %}
             </table>
@@ -347,6 +351,17 @@
 </div> -->
 
 <script>
+    function deleteclientpayment(event, id){
+        alertify.confirm("Confirmer", "Voulez vous vraiment supprimer le payment?", function(){
+            $.get('/product/deleteclientpayment', {'id':id}, (data)=>{
+                alertify.success('reglement supprimé');
+                location.reload()
+                // $(event.target).parent().parent().remove()
+            })
+        }, function(){
+            alertify.error('Annulé');
+        });
+    }
   function setsupplier(event){
     supplierid=$(event.target).val()
     $.get('/product/setsupplier', {
