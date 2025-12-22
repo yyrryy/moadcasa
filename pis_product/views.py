@@ -685,7 +685,7 @@ def relvesupp(request):
     ] + [
         (reglementbl, 'reglement') for reglementbl in reglementsbl
     ]
-    print('>>> ',totalbons)
+    sold=totalbons-totalreglandavoirs
     if supplier.client:
         clientavoirs=Avoir.objects.filter(customer=supplier.client, created_at__range=[startdate, enddate])
         clientbons=SalesHistory.objects.filter(customer=supplier.client, datebon__range=[startdate, enddate])
@@ -703,6 +703,7 @@ def relvesupp(request):
             totalbons+=clientregls.aggregate(Sum('amount')).get('amount__sum') or 0
     #sorted_releve = sorted(releve, key=lambda item: item[0].bondate if item[1]=='bon' else item[0].date)
     sorted_releve = sorted(releve, key=get_date)
+    
     return render(request, 'products/relvesupp.html', {
         # 'bonandpayments': sales_and_returns,
         # 'bons': bons,
@@ -718,7 +719,8 @@ def relvesupp(request):
         'totalcredit':totalreglandavoirs,
         'sold':round(float(totalbons)-float(totalreglandavoirs), 2),
         'supplier':supplier,
-        'releve':sorted_releve
+        'releve':sorted_releve,
+        'sold':sold
         })
 
 
@@ -4768,3 +4770,44 @@ def deleteclientpayment(request):
     return JsonResponse({
         'success':True
     })
+
+def modifieravoirsupp(request):
+    id=request.GET.get('id')
+    avoir=Avoirsupp.objects.get(pk=id)
+    items=PurchasedProduct.objects.filter(avoirsupp=avoir)
+    return render(request, 'products/modifieravoirsupp.html', {
+        'avoir':avoir,
+        'items':items,
+        'title':"Modifier avoir fournisseur"
+    })
+def updateavoirsupp(request):
+    id=request.GET.get('id')
+    avoir=Avoirsupp.objects.get(pk=id)
+    avoiritems=PurchasedProduct.objects.filter(avoirsupp=avoir)
+    for i in avoiritems:
+        i.product.stock+=i.quantity
+        i.product.save()
+    avoiritems.delete()
+    supplierid=request.POST.get('supplierid')
+    date=request.POST.get('date')
+    date=datetime.strptime(f'{date}', '%Y-%m-%d')
+    total=request.POST.get('total')
+    items = json.loads(request.POST.get('items'))
+    avoir.total=total
+    avoir.date=date
+    avoir.save()
+    with transaction.atomic():
+        for i in items:
+            item=i.get('item_id')
+            product = Product.objects.get(pk=item)
+            PurchasedProduct.objects.create(
+                avoirsupp=avoir,
+                product=product,
+                quantity=float(i['qty']),
+                price=float(i['price']),
+                purchase_amount=float(i['total']),
+                isavoirsupp=True,
+            )
+            product.stock=float(product.stock)-float(i['qty'])
+            product.save()
+    return JsonResponse({'status':'ok'})

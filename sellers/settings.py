@@ -77,9 +77,9 @@ WSGI_APPLICATION = 'sellers.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-in1337 = os.getenv('DEBUG')=='True'
-print(in1337, os.getenv('DEBUG'), os.getenv('DEBUG')=='True')
-if in1337:
+usesqlite = os.getenv('DEBUG')=='True' or os.getenv('HOME')=='/home/aaliali'
+print('usesqlite', usesqlite)
+if usesqlite:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
