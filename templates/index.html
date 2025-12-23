@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <!-- for accountant -->
 {% if user.groups.all.0.name == 'account' %}
@@ -7,7 +6,6 @@
     <div class="col-6 row">
         <div class=" row">
             <h3 class="bg-white p-2">Client</h3>
-            
             <div class="col-6">
                 <div class="bg-white bg-white d-flex justify-content-between p-2 align-items-center rounded">
                     <a href="/product/listfactures">
@@ -184,10 +182,7 @@
 <h1 style="text-align: center; font-size: 8em;" class="text-primary">
     {{ request.user.retailer_user.retailer.name }} {% if user.groups.all.0.name == 'account' %} (Facturation){% endif %}
 </h1>
-
 {% endblock %}
-
-
 {% block scripts %}
 {{ block.super }}
 <script>
