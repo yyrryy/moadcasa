@@ -657,10 +657,10 @@
                 const allErrorDivsHaveDNone = $('.errorprice').toArray().every(function(div) {
                     return $(div).hasClass('d-none');
                 });
-                if (!allErrorDivsHaveDNone) {
-                    showerror('Prix de vent doit etre superieur ou egal a prix net');
-                    return;
-                }
+                // if (!allErrorDivsHaveDNone) {
+                //     showerror('Prix de vent doit etre superieur ou egal a prix net');
+                //     return;
+                // }
                 if ($('#item-name').hasClass('item-name') == false || $('select[name="customer"]').val()==0 || $('.datebon').val()=="" || $('.timebon').val()=="") {
                     showerror('Remplir les champs');
                     return;
