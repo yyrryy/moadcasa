@@ -6,7 +6,10 @@
     </a> -->
     {% if avoir %}
     <a onclick="avoirprint('{{bon.id}}')" type="button" class="btn btn-primary">
-        Bon
+        Inprimer Avoir client
+    </a>
+    <a href="/product/modifieravoirclient?id={{bon.id}}" type="button" class="btn btn-success">
+        Modifier Avoir client
     </a>
     {% else %}
 

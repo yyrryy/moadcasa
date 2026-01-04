@@ -4811,3 +4811,19 @@ def updateavoirsupp(request):
             product.stock=float(product.stock)-float(i['qty'])
             product.save()
     return JsonResponse({'status':'ok'})
+
+def modifieravoirclient(request):
+    id=request.GET.get('id')
+    avoir=Avoir.objects.get(pk=id)
+    items=StockIn.objects.filter(avoir_reciept=avoir)
+    return render(request, 'products/modifieravoirclient.html', {
+        'avoir':avoir,
+        'items':items,
+        'title':"Modifier avoir client"
+    })
+
+def getbuyprices(request):
+    prices=StockIn.objects.filter(avoir_reciept=None, product_id=request.GET.get('productid'))[:30].order_by('-price')
+    return JsonResponse({
+        'prices':list(prices.values())
+    })

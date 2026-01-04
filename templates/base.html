@@ -1226,6 +1226,12 @@ Version: 1.3.0
 
 
 <script>
+  function getbuyprices(id){
+    $.get(`/product/getbuyprices?id=${id}`,
+    function(data){
+      $('.buypricesdata'+id).html(data.data)
+    })
+  }
   function bonachatdata(id){
         $('.bondataholder').removeClass('d-none')
         $.post(`/product/bonentree/${id}`,{
