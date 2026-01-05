@@ -9,8 +9,13 @@ from pis_product.logs_view import DailyStockLogs, MonthlyStockLogs
 #modifierboncomptoir
 
 urlpatterns = [
-    # re_path(r'^notworking/',views.notworking, name='notworking'),
-    # re_path(r'^notworking/',views.notworking, name='notworking'),
+    # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    re_path(r'^getbuyprices/',views.getbuyprices, name='getbuyprices'),
     re_path(r'^modifieravoirclient/',views.modifieravoirclient, name='modifieravoirclient'),
     re_path(r'^deleteclientpayment/',views.deleteclientpayment, name='deleteclientpayment'),
     re_path(r'^updateavoirsupp/',views.updateavoirsupp, name='updateavoirsupp'),

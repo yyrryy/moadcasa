@@ -1,0 +1,18 @@
+<table class="table table-bordered">
+    {%for i in prices%}
+    <tr>
+        <td>
+            {{i.reciept.date|date:"d/m/Y"}} 
+        </td>
+        <td>
+            {{i.reciept.receipt_no}}
+        </td>
+        <td>
+            {{i.reciept.supplier.name}}
+        </td>
+        <td>
+            {{i.price|floatformat:2}} Dh
+        </td>
+    </tr>
+    {%endfor%}
+</table>

@@ -3192,6 +3192,7 @@ def searchproduct(request):
             'id':f'{i.ref}§{i.car}§{i.pr_achat}§{stock}§{i.id}§{i.remise}§{i.prnet}',
             'text':f'{i.ref} - {i.car}'
         })
+    print('>>', results)
     return JsonResponse({'results': results})
 
 
@@ -4823,7 +4824,46 @@ def modifieravoirclient(request):
     })
 
 def getbuyprices(request):
-    prices=StockIn.objects.filter(avoir_reciept=None, product_id=request.GET.get('productid'))[:30].order_by('-price')
+    prices = (
+        StockIn.objects
+        .filter(avoir_reciept=None, product_id=request.GET.get('id'))
+        .order_by('-price')[:30]
+    )
+    print('>> ', prices)
+
     return JsonResponse({
-        'prices':list(prices.values())
+        'prices': render(request, 'products/buyprices.html', {'prices': prices}).content.decode('utf-8')
     })
+
+def updateavoirclient(request):
+    id=request.GET.get('id')
+    avoir=Avoir.objects.get(pk=id)
+    avoiritems=StockIn.objects.filter(avoir_reciept=avoir)
+    for i in avoiritems:
+        i.product.stock-=i.quantity
+        i.product.save()
+    avoiritems.delete()
+    clientid=request.POST.get('clientid')
+    date=request.POST.get('date')
+    date=datetime.strptime(f'{date}', '%Y-%m-%d')
+    total=request.POST.get('total')
+    items = json.loads(request.POST.get('items'))
+    avoir.grand_total=total
+    avoir.dateavoir=date
+    avoir.save()
+    with transaction.atomic():
+        for i in items:
+            item=i.get('item_id')
+            product = Product.objects.get(pk=item)
+            StockIn.objects.create(
+                product=product,
+                quantity=float(i['qty']),
+                price=float(i['price']),
+                avoir_reciept=avoir,
+                total=i['total'],
+                status=0
+            )
+            product.stock=float(product.stock)+float(i['qty'])
+            product.save()
+    return JsonResponse({'status':'ok'})
+

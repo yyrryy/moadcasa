@@ -1229,7 +1229,7 @@ Version: 1.3.0
   function getbuyprices(id){
     $.get(`/product/getbuyprices?id=${id}`,
     function(data){
-      $('.buypricesdata'+id).html(data.data)
+      $('.buyingpriceinfo'+id).html(data.prices)
     })
   }
   function bonachatdata(id){

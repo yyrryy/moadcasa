@@ -32,7 +32,7 @@
     <div class="row mb-5">
         <div class="col-2">
             <!-- <h5 class="rounded shadow p-2 text-white" style="background:black;">
-                Bon Avoir Fournisseur
+                Bon Avoir client
             </h5> -->
 
             <h5 class="rounded shadow p-2 text-white" style="background:black;">
@@ -152,7 +152,7 @@
             </div> -->
             <!-- <select class="form-selsect select2 customer w-100" name="customer" id="customer">
                 <option value="0">
-                    Fournisseur
+                    client
                 </option>
                 {% for i in suppliers %}
                     <option value="{{ i.id }}">
@@ -219,14 +219,19 @@
             // get product client id
             let clientid=$('.customerselect').val()
             let [ref, car, p, stock, productid, remise, prnet]=$(this).val().split('§')
-            console.log(clientid, productid)
+            console.log('ref', ref, 'car', car, 'p', p, 'stock', stock, 'productid', productid, 'remise', remise, 'prnet', prnet)
             // get supplier price
-            $.get('/product/getsupplierprice',
+            $.get('/product/getclientprice',
             {clientid:clientid, productid:productid},
             (data)=>{
                 if (data.price==0){
-                    alertify.alert("ERROR", 'Produit non disponible pour ce Fournisseur')
+                    alertify.alert("ERROR", 'Produit non disponible pour ce client')
                     return
+                }
+                if (data.remise){
+                    remise=data.remise
+                }else{
+                    remise=0
                 }
                 $('.itemsbon').append(`<tr class="item-row ">
                         <td id="item-name" class="item-name">
@@ -235,7 +240,7 @@
                             </strong>
                         </td>
                         <td class="stock">
-                            ${data.qty}
+                            ${stock}
 
                         </td>
                         <td>
@@ -245,7 +250,7 @@
                             <input readonly value="${data.price}" class="form-control price" onkeyup="calculate(event)" >
                         </td>
                         <td>
-                            <input readonly value="${data.remise}" class="form-control remise" onkeyup="calculate(event)" >
+                            <input readonly value="${remise}" class="form-control remise" onkeyup="calculate(event)" >
                         </td>
 
                         <td>
@@ -389,7 +394,7 @@
                     return
                 }
 								if ($('[name="clientid"]').val()=="" || $('.avoirdate').val()==""){
-									showerror('Fournisseur ou date avoir sont vide');
+									showerror('client ou date avoir sont vide');
 									return
 								}
                 $('.item-error').hide();
@@ -428,8 +433,7 @@
                         items: JSON.stringify(items),
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     }, function (result, status) {
-
-                        window.location.href=`/product/supplierinfo/${$('.customerselect').val()}`
+                        window.location.href=`/ledger/customer/${$('.customerselect').val()}/ledger/details/`
                     }
                 ).fail(function (xhr, status, errors) {
                     $('#create-invoice').removeClass('disabled')
