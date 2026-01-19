@@ -4867,3 +4867,9 @@ def updateavoirclient(request):
             product.save()
     return JsonResponse({'status':'ok'})
 
+def listavoircomptoir(request):
+    ctx={
+        'title':'listavoircomptoir',
+        'avoirs':Avoir.objects.filter(customer=None)
+    }
+    return render(request, 'products/listavoircomptoir.html', ctx)

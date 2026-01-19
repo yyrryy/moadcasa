@@ -18,7 +18,7 @@ from pis_retailer.models import RetailerUser
 from pis_retailer.forms import RetailerForm, RetailerUserForm
 # import render
 from django.shortcuts import render, redirect
-from pis_product.models import Product, Category, PaymentClient
+from pis_product.models import Product, Category, PaymentClient, Avoir
 from pis_sales.models import SalesHistory
 import shutil
 from django.http import JsonResponse
@@ -161,7 +161,7 @@ class HomePageView(ListView):
         today_sales = SalesHistory.objects.filter(customer=None, datebon__date=timezone.now()).aggregate(total_sales=Sum('grand_total'))['total_sales'] or 0
         todayreglementespece=PaymentClient.objects.filter(Q(mode='espece')|Q(iscash=True), date__date=timezone.now().date()).aggregate(totalamount=Sum('amount'))['totalamount'] or 0
         
-
+        todayavoir=Avoir.objects.filter(dateavoir=timezone.localdate()).aggregate(total_sales=Sum('grand_total'))['total_sales'] or 0
         context.update({
             'totalproducts':Product.objects.all().count(),
             'totalclients':Customer.objects.all().count(),
@@ -169,7 +169,7 @@ class HomePageView(ListView):
             'notpaid':SalesHistory.objects.filter(paid_amount__lt=F('grand_total')).count(),
             'sales_count': sales.count(),
             'sales_sum': round(
-                today_sales+todayreglementespece, 2
+                today_sales+todayreglementespece-todayavoir, 2
             ),
             
             #'cc':Category.objects.filter(children__isnull=True),

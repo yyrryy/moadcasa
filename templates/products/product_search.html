@@ -53,10 +53,10 @@
             
             
 
-            {{item.pr_achat}} 
+            {{item.getprixachathignin30}} 
             <div class="position-relative" onmouseleave="$('.buyingpriceinfo{{item.id}}').fadeOut()" onmouseenter="$('.buyingpriceinfo{{item.id}}').fadeIn(), getbuyprices({{item.id}})">
                 <div class="shadow bg-white border rounded p-2 buyingpriceinfo{{item.id}}"
-                        style="display:none; position:absolute; z-index:1050; left:80px">
+                        style="display:none; position:absolute; z-index:1050; right:100px">
                     Loading...
                 </div>
                 <button class="btn btn-info btn-sm fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="Prix d'achat historique"></button>

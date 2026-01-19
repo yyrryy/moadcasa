@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from django.db import models
-from django.db.models import Sum, Q, F
+from django.db.models import Sum, Q, F, Max
 import random
 from django.db.models.signals import post_save
 import json
@@ -208,7 +208,15 @@ class Product(models.Model):
     car = models.CharField(max_length=5000, blank=True, null=True, default=None)
     bar_code = models.CharField(max_length=500, unique=True, blank=True, null=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    
+    @property
+    def getprixachathignin30(self):
+        qs = (
+            StockIn.objects
+            .filter(product=self, reciept__isnull=False)
+            .order_by('reciept__date')[:30]
+        )
+        highest_price = qs.aggregate(max_price=Max('price'))['max_price']
+        return highest_price or 0
     def getsimillars(self):
         originref=self.ref.split()[0]
         return Product.objects.exclude(id=self.id).filter(category=self.category).filter(ref__startswith=originref).exclude(stock=0)
