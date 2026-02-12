@@ -103,7 +103,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="">Heur</label>
-                                <input type="time" class="form-control" name="time" required>
+                                <input type="time" class="form-control" name="time">
                             </div>
                             <br>
                             <div class="form-group">
@@ -305,7 +305,7 @@
                     <td>
                         {% if i.isfacture %}(FC){% endif %}
                     </td>
-                    <td> {{i.created_at|date:"d/m/Y"}}</td>
+                    <td> {{i.date|date:"d/m/Y"}}</td>
                     <td>{{i.echeance|date:"d/m/Y"}}</td>
                     <td>{{i.mode}}</td>
                     <td>{{i.amount|floatformat:2}} DH
