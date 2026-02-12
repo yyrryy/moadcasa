@@ -93,7 +93,7 @@
         <thead style="font-size: 10px;
         font-weight: 800;" class="text-center">
           <tr>
-            <td>Ref</td>
+            <td style="width: 7%;">Ref</td>
             <td>Designation</td>
             <td>Qté</td>
             <td>P.U</td>
@@ -227,7 +227,7 @@
         <thead style="font-size: 10px;
         font-weight: 800;" class="text-center">
           <tr>
-            <td>Ref</td>
+            <td style="width: 7%;">Ref</td>
             <td>Designation</td>
             <td>Qté</td>
             <td>P.U</td>
@@ -245,7 +245,7 @@
               </td>
             <td style="height: 190mm;white-space: nowrap;padding-left:3px">
                 {% for v in i %}
-                  {{v.product.car.upper|slice:"50"}}
+                  {{v.product.car.upper|slice:"40"}}
                   {% if not forloop.counter == i|length %}<br>{% endif %}
                 {% endfor %}
             </td>
