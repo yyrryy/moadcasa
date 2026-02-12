@@ -106,37 +106,43 @@
                     <td style="padding-left:3px">
                       {% for v in i %}
                       {{v.product.ref.upper}}
-                      {% if not forloop.counter == i|length %}<br>{% endif %}
+                      
+                      <br>
                       {% endfor %}
                     </td>
                   <td style="height: 190mm;white-space: nowrap;padding-left:3px">
                       {% for v in i %}
                         {{v.product.car.upper|slice:"50"}}
-                        {% if not forloop.counter == i|length %}<br>{% endif %}
+                        
+                        <br>
                       {% endfor %}
                   </td>
                   <td class="text-center">
                     {% for v in i %}
                     {{v.quantity}}
-                    {% if not forloop.counter == i|length %}<br>{% endif %}
+                    
+                    <br>
                     {% endfor %}
                   </td>
                   <td class="text-center">
                     {% for v in i %}
                     {{v.price|floatformat:2|intspace}}
-                    {% if not forloop.counter == i|length %}<br>{% endif %}
+                    
+                    <br>
                     {% endfor %}
                   </td>
                   <!-- <td class="text-center">
                     {% for v in i %}
                     {{v.remise}}%
-                    {% if not forloop.counter == i|length %}<br>{% endif %}
+                    
+                    <br>
                     {% endfor %}
                   </td> -->
                   <td class="text-center">
                     {% for v in i %}
                     {{v.purchase_amount|floatformat:2|intspace}}
-                    {% if not forloop.counter == i|length %}<br>{% endif %}
+                    
+                    <br>
                     {% endfor %}
                   </td>
 
@@ -240,37 +246,43 @@
               <td style="padding-left:3px">
                 {% for v in i %}
                 {{v.product.ref.upper}}
-                {% if not forloop.counter == i|length %}<br>{% endif %}
+                
+                <br>
                 {% endfor %}
               </td>
             <td style="height: 190mm;white-space: nowrap;padding-left:3px">
                 {% for v in i %}
                   {{v.product.car.upper|slice:"40"}}
-                  {% if not forloop.counter == i|length %}<br>{% endif %}
+                  
+                  <br>
                 {% endfor %}
             </td>
             <td class="text-center">
               {% for v in i %}
               {{v.quantity}}
-              {% if not forloop.counter == i|length %}<br>{% endif %}
+              
+              <br>
               {% endfor %}
             </td>
             <td class="text-center">
               {% for v in i %}
               {{v.price|floatformat:2|intspace}}
-              {% if not forloop.counter == i|length %}<br>{% endif %}
+              
+              <br>
               {% endfor %}
             </td>
             <!-- <td class="text-center">
               {% for v in i %}
               {{v.remise}}%
-              {% if not forloop.counter == i|length %}<br>{% endif %}
+              
+              <br>
               {% endfor %}
             </td> -->
             <td class="text-center">
               {% for v in i %}
               {{v.purchase_amount|floatformat:2|intspace}}
-              {% if not forloop.counter == i|length %}<br>{% endif %}
+              
+              <br>
               {% endfor %}
             </td>
 
