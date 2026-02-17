@@ -14,7 +14,7 @@ def get_local_ip():
 
 ip = get_local_ip()
 def runserver():
-    os.system(f'python manage.py runserver {ip}:80')
+    os.system(f'python manage.py runserver 0.0.0.0:80')
 
 def lunchchrome():
     sleep(2)  # wait for server
