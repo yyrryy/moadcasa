@@ -4768,6 +4768,10 @@ def deleteclientpayment(request):
     id=request.GET.get('id')
     reglement=PaymentClient.objects.get(pk=id)
     reglement.delete()
+    bon=reglement.bon
+    if bon:
+        bon.paid_amount=float(bon.paid_amount)-float(reglement.amount)
+        bon.save()
     return JsonResponse({
         'success':True
     })

@@ -92,16 +92,16 @@ class Customer(models.Model):
 
     def __unicode__(self):
         return self.customer_name
-    # def sold(self):
-    #     from pis_sales.models import SalesHistory
-    #     from pis_product.models import Avoir, PaymentClient 
-    #     bons = SalesHistory.objects.filter(customer=self)
-    #     paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
-    #     avoirs = Avoir.objects.filter(customer=self)
-    #     payments=PaymentClient.objects.filter(client=self)
-    #     totalcredit=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
-    #     totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
-    #     return float(totalbons)-float(totalcredit)-float(paid_amount)
+    def sold(self):
+        from pis_sales.models import SalesHistory
+        from pis_product.models import Avoir, PaymentClient 
+        bons = SalesHistory.objects.filter(customer=self)
+        paid_amount=bons.aggregate(Sum('paid_amount')).get('paid_amount__sum') or 0
+        avoirs = Avoir.objects.filter(customer=self)
+        payments=PaymentClient.objects.filter(client=self)
+        avoirandreglemnt=(avoirs.aggregate(Sum('grand_total')).get('grand_total__sum') or 0)+(payments.aggregate(Sum('amount')).get('amount__sum') or 0)
+        totalbons=bons.aggregate(Sum('grand_total')).get('grand_total__sum') or 0
+        return float(totalbons)-float(avoirandreglemnt)
 
 
 class FeedBack(models.Model):

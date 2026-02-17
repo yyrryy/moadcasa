@@ -115,11 +115,12 @@ class CustomerLedgerView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(CustomerLedgerView, self).get_context_data(**kwargs)
-        customers = (
-            self.request.user.retailer_user.retailer.
-            retailer_customer.all()
-        ).order_by('-rest')
-        total_sold=customers.aggregate(Sum('rest'))['rest__sum'] or 0
+        customers = list(
+            self.request.user.retailer_user.retailer.retailer_customer.all()
+        )
+
+        customers.sort(key=lambda c: c.sold(), reverse=True)
+        #total_sold=customers.aggregate(Sum('rest'))['rest__sum'] or 0
         # customer_ledger = []
 
         # for customer in customers:
@@ -169,7 +170,7 @@ class CustomerLedgerView(TemplateView):
         # customer_ledger=sorted(customer_ledger, key=lambda k: k['remaining_ledger'], reverse=True)
         context.update({
             'customers': customers,
-            'total_sold':total_sold,
+            #'total_sold':total_sold,
             #'total_remaining_amount': total_remaining_amount,
             'title': 'Liste Clients'
         })
