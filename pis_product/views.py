@@ -314,9 +314,7 @@ def addpaymentsclient(request):
     retailer=Retailer.objects.get(pk=1)
     client=Customer.objects.get(pk=request.POST.get('client'))
     date=request.POST.get('date')
-    time=request.POST.get('time')
-    datetime_str = f"{date} {time}" 
-    date = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+    date = datetime.strptime(date, '%Y-%m-%d')
     mantant=request.POST.get('mantant')
     mode=request.POST.get('mode')
     echeance=request.POST.get('echeance') or None
