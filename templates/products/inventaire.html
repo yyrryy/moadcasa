@@ -43,7 +43,7 @@
         </div>
         <div class="col-3">
             <strong for="">Type de stock</strong>
-            <select name="typestock" class="form-select">
+            <select name="typestockmark" class="form-select">
                 <option value="0">Stock null</option>
                 <option value="1">Stock reel</option>
 		<option value="2">Tous</option>
@@ -116,7 +116,7 @@
     $('.generateinventairemark').on('click', ()=>{
         console.log('clicked mark')
         var mark = $('.marks').find('option:selected').text();
-        var typestock = $('select[name="typestock"]').val();
+        var typestock = $('select[name="typestockmark"]').val();
         $('.inventaireholder').html(mark);
         var id = $('.marks').val();
         $.ajax({
