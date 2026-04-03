@@ -385,6 +385,32 @@ def getdeffusionpdct(request):
         'data':res
     })
 
+
+def inventairemark(request):
+    id=request.GET.get('id')
+    typestock=request.GET.get('typestock')
+    if id=='0':
+        if typestock=='0':
+            products=Product.objects.filter(stock__lte=0).order_by('ref')
+        elif typestock=='1':
+            products=Product.objects.filter(stock__gt=0).order_by('ref')
+        else:
+            products=Product.objects.filter().order_by('ref')
+    else:
+        if typestock=='0':
+            products=Product.objects.filter(mark_id=id, stock__lte=0).order_by('ref')
+        elif typestock=='1':
+            products=Product.objects.filter(mark_id=id, stock__gt=0).order_by('ref')
+        else:
+            products=Product.objects.filter(mark_id=id).order_by('ref')
+    totalstockvalue=round(sum([i.stockvalue() for i in products]), 2)
+    # trs=''
+    # for i in products:
+    #     trs+=f'<tr><td>{i.ref}</td><td>{i.car}</td><td>{int(i.stock)}</td></tr>'
+    return JsonResponse({
+        'data':render(request, 'products/inventaire_table.html', {'products':products}).content.decode('utf-8'),
+        'totalstockvalue':totalstockvalue
+    })
 def inventaire(request):
     if not request.user.retailer_user.retailer.working:
         # return render(request, 'products/nopermission.html')

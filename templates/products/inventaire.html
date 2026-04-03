@@ -7,7 +7,7 @@
         <div class="col-7">
             <strong for="">Categorie</strong>
             <select class="form-select categories select2" required name="pcategory">
-                <option value="0">Tous</option>
+                <option value="0">Tous les category</option>
                 {% for i in categories %}
                 <option value="{{i.id}}">
                     {{i.name}}
@@ -29,12 +29,38 @@
             </button>
         </div>
     </div>
+    <div class="row align-items-center">
+        <div class="col-7">
+            <strong for="">Mark</strong>
+            <select class="form-select marks select2" required name="marks">
+                <option value="0">Tous les mark</option>
+                {% for i in marks %}
+                <option value="{{i.id}}">
+                    {{i.name}}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-3">
+            <strong for="">Type de stock</strong>
+            <select name="typestock" class="form-select">
+                <option value="0">Stock null</option>
+                <option value="1">Stock reel</option>
+		<option value="2">Tous</option>
+            </select>
+        </div>
+        <div class="col-2">
+            <button class="btn btn-primary generateinventairemark">
+                Generer
+            </button>
+        </div>
+    </div>
     <button class="btn btn-primary mt-3" onclick="prt()">
         print
     </button>
     <div class="bg-white border p-2 rounded shadow mt-2" id="print">
         <div class="d-flex justify-content-between mb-5">
-            <strong class="text-center">Inventaire des <strong class="categoryholder"></strong> </strong>
+            <strong class="text-center">Inventaire des <strong class="inventaireholder"></strong> </strong>
             <strong class="currentdate"></strong>
         </div>
         <table class="table table-bordered h6" style="font-size: 15px;">
@@ -71,7 +97,7 @@
         console.log('clicked')
         var category = $('.categories').find('option:selected').text();
         var typestock = $('select[name="typestock"]').val();
-        $('.categoryholder').html(category);
+        $('.inventaireholder').html(category);
         var id = $('.categories').val();
         $.ajax({
             url: "{% url 'product:inventaire' %}",
@@ -80,6 +106,25 @@
                 id: id,
                 'typestock':typestock,
                 'csrfmiddlewaretoken': '{{csrf_token}}'
+            },
+            success: function(data){
+                $('.inventaire').html(data.data);
+                $('.totalstockvalue').text(data.totalstockvalue);
+            }
+        })
+    })
+    $('.generateinventairemark').on('click', ()=>{
+        console.log('clicked')
+        var mark = $('.marks').find('option:selected').text();
+        var typestock = $('select[name="typestock"]').val();
+        $('.inventaireholder').html(mark);
+        var id = $('.marks').val();
+        $.ajax({
+            url: "{% url 'product:inventairemark' %}",
+            type: 'GET',
+            data: {
+                id: id,
+                'typestock':typestock,
             },
             success: function(data){
                 $('.inventaire').html(data.data);
