@@ -445,7 +445,7 @@ def inventaire(request):
     ctx={
         'title':'Inventaire des Produuits',
         #'products':Product.objects.all(),
-        'categories':Category.objects.filter(children__isnull=True).order_by('name')
+        'categories':Category.objects.filter(children__isnull=True).order_by('name'),
         'marks':Mark.objects.all().order_by('name')
     }
     return render(request, 'products/inventaire.html', ctx)
