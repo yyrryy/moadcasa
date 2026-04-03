@@ -114,13 +114,13 @@
         })
     })
     $('.generateinventairemark').on('click', ()=>{
-        console.log('clicked')
+        console.log('clicked mark')
         var mark = $('.marks').find('option:selected').text();
         var typestock = $('select[name="typestock"]').val();
         $('.inventaireholder').html(mark);
         var id = $('.marks').val();
         $.ajax({
-            url: "{% url 'product:inventairemark' %}",
+            url: "{% url 'product:markinventaire' %}",
             type: 'GET',
             data: {
                 id: id,

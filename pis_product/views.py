@@ -386,9 +386,11 @@ def getdeffusionpdct(request):
     })
 
 
-def inventairemark(request):
+def markinventaire(request):
+    print("form inventaire mark")
     id=request.GET.get('id')
     typestock=request.GET.get('typestock')
+    print("=====", id, typestock)
     if id=='0':
         if typestock=='0':
             products=Product.objects.filter(stock__lte=0).order_by('ref')
@@ -404,6 +406,7 @@ def inventairemark(request):
         else:
             products=Product.objects.filter(mark_id=id).order_by('ref')
     totalstockvalue=round(sum([i.stockvalue() for i in products]), 2)
+    print("sdasda", products)
     # trs=''
     # for i in products:
     #     trs+=f'<tr><td>{i.ref}</td><td>{i.car}</td><td>{int(i.stock)}</td></tr>'
@@ -411,7 +414,9 @@ def inventairemark(request):
         'data':render(request, 'products/inventaire_table.html', {'products':products}).content.decode('utf-8'),
         'totalstockvalue':totalstockvalue
     })
+
 def inventaire(request):
+    print("from simple inv")
     if not request.user.retailer_user.retailer.working:
         # return render(request, 'products/nopermission.html')
         pass
@@ -454,7 +459,6 @@ def inventaire(request):
 def pondire(request):
     product=Product.objects.get(pk=request.POST.get('id'))
     stockin=StockIn.objects.filter(product=product)
-
     qts=0
     prcs=0
     for b in stockin:
