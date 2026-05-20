@@ -834,7 +834,7 @@ def updatefacture(request):
 
 @csrf_exempt
 def avoirdata(request):
-    id=request.POST.get('id')
+    id=request.GET.get('id')
     bon=Avoir.objects.get(pk=id)
     items=StockIn.objects.filter(avoir_reciept=bon)
     return JsonResponse({

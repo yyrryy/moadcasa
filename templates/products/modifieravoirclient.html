@@ -433,7 +433,12 @@
                         items: JSON.stringify(items),
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     }, function (result, status) {
-                        window.location.href=`/ledger/customer/${$('.customerselect').val()}/ledger/details/`
+                        clientid = $('.customerselect').val()
+                        if (clientid){
+                            location.href=`/ledger/customer/${clientid}/ledger/details/`
+                        }else{
+                            alertify.success('Avoir comptoir modifié avec succès')
+                        }
                     }
                 ).fail(function (xhr, status, errors) {
                     $('#create-invoice').removeClass('disabled')

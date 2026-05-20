@@ -1259,6 +1259,14 @@ table{
     firsttr.find('.stock').text(qtyofout)
     firsttr.find('.price').val(priceofout)
   }
+  function avoirdata(id){
+    
+    $('.avoirdataholder').removeClass('d-none')
+    $('.avoirdata').html('<div class="spinner-grow text-primary" role="status"><span class="sr-only">Loading...</span></div>')
+        $.get("{% url 'product:avoirdata' %}",{id:id},function(data){
+            $('.avoirdata').html(data.data)
+        })
+    }
   function bondata(id){
     
     $('.bondataholder').removeClass('d-none')

@@ -91,6 +91,10 @@
                     Ajouter un produit
                 </button>
                 <select class="productslist form-control col-6"></select>
+                <div>
+                    Dernier prix d'achat: <span class="pdctselecedprachat"></span> <br>
+                    Prix achat moins chere <span class="lowpdctselecedprachat"></span>
+                </div>
             </div>
                 <!-- button for addsupplier modal -->
 
@@ -300,11 +304,19 @@
             // get product client id
             let [ref, car, p, stock, productid, remise, prnet]=$(this).val().split('§')
             // get supplier price
+            $('.pdctselecedprachat').text("--")
+            $('.lowpdctselecedprachat').text("--")
             productsinstorage=JSON.parse(localStorage.getItem('pdctsinupdatebonachat'))
             if (productsinstorage.includes(productid)){
                 alertify.error('Deja')
                 return
             }
+            $('.pdctselecedprachat').text(p)
+            $.get('/product/getproductdata', {
+                'id':productid
+            }, (data)=>{
+                $('.lowpdctselecedprachat').text(data.lowpriceachat)
+            })
             productsinstorage.push(productid)
             localStorage.setItem('pdctsinupdatebonachat', JSON.stringify(productsinstorage))
             $('.itemsbon').prepend(`<tr class="item-row">
