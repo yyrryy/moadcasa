@@ -390,13 +390,13 @@
         })
 
 
-    const avoirdata=(id)=>{
-        $('.avoirdataholder').removeClass('d-none')
-        $.post("{% url 'product:avoirdata' %}",{id:id},function(data){
-            $('.avoirdata').html(data.data)
-        })
+    // const avoirdata=(id)=>{
+    //     $('.avoirdataholder').removeClass('d-none')
+    //     $.post("{% url 'product:avoirdata' %}",{id:id},function(data){
+    //         $('.avoirdata').html(data.data)
+    //     })
 
-    }
+    // }
     const hideavoirdata=()=>{
         $('.avoirdataholder').addClass('d-none')
     }
