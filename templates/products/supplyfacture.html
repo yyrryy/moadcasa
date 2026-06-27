@@ -97,7 +97,8 @@
     
             <div class="bg-dark p-2 text-white mt-2 rounded">
                 Dernier prix d'achat: <span class="pdctselecedprachat"></span> <br>
-                Prix achat moins chere <span class="lowpdctselecedprachat"></span>
+                Prix achat moins chere <span class="lowpdctselecedprachat"></span><br>
+                Prix achat plus chere <span class="highpdctselecedprachat"></span>
             </div>
             <hr>
                 <div class="form-group">
@@ -235,6 +236,7 @@
                 'id':productid
             }, (data)=>{
                 $('.lowpdctselecedprachat').text(data.lowpriceachat)
+                $('.highpdctselecedprachat').text(data.highpriceachat)
             })
             // else{
             // $('.itemsbon').prepend(`<tr class="item-row">

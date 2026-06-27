@@ -1361,7 +1361,17 @@ table{
                 })
             }
         })
-  
+  function updatebondate(event, bonid){
+    date=$(event.target).parent().find('input[type="date"]').val()
+    $.get('/product/updatebondate', {
+      'date':date,
+      'bonid':bonid
+    }, (data)=>{
+      if (data.success){
+        alertify.success('Date modifié')
+      }
+    })
+  }
         function addpaymentbon(event, bonid){
     amount=$('.paidamount').val()
     mode=$('.mode').val()

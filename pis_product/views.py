@@ -3388,6 +3388,10 @@ def getproductdata(request):
     stockin=StockIn.objects.filter(product_id=id, avoir_reciept=None).order_by('price')
     if stockin.first():
         lowprice=stockin.first().price
+        lowprice=stockin.first().price
+    highprice=0.00
+    if stockin.last():
+        highprice=stockin.last().price
     clientid=request.GET.get('clientid')    
     clientprice=0.00
     stockout=PurchasedProduct.objects.filter(invoice__customer_id=clientid, product_id=id)
@@ -3400,6 +3404,7 @@ def getproductdata(request):
         'price':product.pr_achat,
         'prnet':product.prnet,
         'lowpriceachat':lowprice,
+        'highpriceachat':highprice,
         'prixgro':product.prvente,
         'prixcomptoir':float(product.price),
         'prixmagazin':float(product.price2),
@@ -4906,3 +4911,15 @@ def listavoircomptoir(request):
         'avoirs':Avoir.objects.filter(customer=None)
     }
     return render(request, 'products/listavoircomptoir.html', ctx)
+
+def updatebondate(request):
+    bonid=request.GET.get('bonid')
+    date=request.GET.get('date')
+    print('>>>>>', date)
+    datebon=datetime.strptime(date, '%Y-%m-%d')
+    bon=SalesHistory.objects.get(pk=bonid)
+    bon.datebon=datebon
+    bon.save()
+    return JsonResponse({
+        'success':True
+    })

@@ -93,7 +93,8 @@
                 <select class="productslist form-control col-6"></select>
                 <div>
                     Dernier prix d'achat: <span class="pdctselecedprachat"></span> <br>
-                    Prix achat moins chere <span class="lowpdctselecedprachat"></span>
+                    Prix achat moins chere <span class="lowpdctselecedprachat"></span><br>
+                    Prix achat plus chere <span class="highpdctselecedprachat"></span>
                 </div>
             </div>
                 <!-- button for addsupplier modal -->
@@ -306,6 +307,8 @@
             // get supplier price
             $('.pdctselecedprachat').text("--")
             $('.lowpdctselecedprachat').text("--")
+            $('.highpdctselecedprachat').text("--")
+
             productsinstorage=JSON.parse(localStorage.getItem('pdctsinupdatebonachat'))
             if (productsinstorage.includes(productid)){
                 alertify.error('Deja')
@@ -316,6 +319,7 @@
                 'id':productid
             }, (data)=>{
                 $('.lowpdctselecedprachat').text(data.lowpriceachat)
+                $('.highpdctselecedprachat').text(data.highpriceachat)
             })
             productsinstorage.push(productid)
             localStorage.setItem('pdctsinupdatebonachat', JSON.stringify(productsinstorage))
