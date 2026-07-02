@@ -1267,6 +1267,9 @@ table{
             $('.avoirdata').html(data.data)
         })
     }
+    const hideavoirdata=()=>{
+        $('.avoirdataholder').addClass('d-none')
+    }
   function bondata(id){
     
     $('.bondataholder').removeClass('d-none')
@@ -1372,6 +1375,18 @@ table{
       }
     })
   }
+  function updateavoirdate(event, avoirid){
+    date=$(event.target).parent().find('input[type="date"]').val()
+    $.get('/product/updateavoirdate', {
+      'date':date,
+      'avoirid':avoirid
+    }, (data)=>{
+      if (data.success){
+        alertify.success('Date modifié')
+      }
+    })
+  }
+  
         function addpaymentbon(event, bonid){
     amount=$('.paidamount').val()
     mode=$('.mode').val()

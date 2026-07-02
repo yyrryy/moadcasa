@@ -148,6 +148,8 @@
                 <td>{{ customer.customer_phone }}</td>
                 <td>{{ customer.sold|floatformat:2 }} DH</td>
                 <td>
+                    <button class="btn btn-danger" onclick="deleteclient('{{customer.id}}')">supprimer</button>
+                </td>
                 <!--     <a href="{% url 'ledger:customer_ledger_detail' customer_id=customer.id %}"><button class="btn btn-success btn-xs" title="Customer Ledger Detail"><i class="fa fa-eye"></i></button></a> -->
             </tr>
             {% empty %}

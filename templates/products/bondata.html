@@ -27,9 +27,15 @@
   </div>
 <div class="bg-white rounded shadow" id="print-invoice" style="padding: 10px">
     <div class="col-5 d-flex justify-content-between align-items-center">
+        {% if avoir %}
+        <p class="text-danger">*Modifier la date de l'avoir</p>
+        <input type="date" class="form-control" id="bon-date" value="{{bon.dateavoir|date:'Y-m-d'}}">
+        <button class="btn btn-primary mt-2" onclick="updateavoirdate(event, '{{bon.id}}')">Modifier</button>
+        {% else %}
         <p class="text-danger">*Modifier la date du bon</p>
         <input type="date" class="form-control" id="bon-date" value="{{bon.datebon|date:'Y-m-d'}}">
         <button class="btn btn-primary mt-2" onclick="updatebondate(event, '{{bon.id}}')">Modifier</button>
+        {%endif%}
     </div>
     <div class="row">
         <div class="d-flex justify-content-between head align-itmes-center">

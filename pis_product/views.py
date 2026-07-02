@@ -4923,3 +4923,15 @@ def updatebondate(request):
     return JsonResponse({
         'success':True
     })
+
+def updateavoirdate(request):
+    avoirid=request.GET.get('avoirid')
+    date=request.GET.get('date')
+    print('>>>>>', date)
+    dateavoir=datetime.strptime(date, '%Y-%m-%d')
+    avoir=Avoir.objects.get(pk=avoirid)
+    avoir.dateavoir=dateavoir
+    avoir.save()
+    return JsonResponse({
+        'success':True
+    })

@@ -12,6 +12,7 @@ urlpatterns = [
     # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
     # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
     # re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),
+    re_path(r'^updateavoirdate/',views.updateavoirdate, name='updateavoirdate'),
     re_path(r'^updatebondate/',views.updatebondate, name='updatebondate'),
     re_path(r'^listavoircomptoir/',views.listavoircomptoir, name='listavoircomptoir'),
     re_path(r'^updateavoirclient/',views.updateavoirclient, name='updateavoirclient'),

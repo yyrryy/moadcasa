@@ -178,7 +178,8 @@
                                         Stock initial
                                         {% else %}
                                             Avoir {% if i.avoir_reciept.customer %}
-                                                clt {{i.avoir_reciept.customer.customer_name}}{% else %}Comptoir
+                                                <a type="button" onclick="avoirdata({{i.avoir_reciept.id}})" class="text-success">{{i.avoir_reciept.customer.customer_name}}</a>
+                                                {% else %}Comptoir
                                             {% endif %}
 
                                         {%endif%}
