@@ -3405,6 +3405,7 @@ def getproductdata(request):
         'prnet':product.prnet,
         'lowpriceachat':lowprice,
         'highpriceachat':highprice,
+        # 'highpriceachatdate':highprice.receipt.date.strftime("d/m/Y"),
         'prixgro':product.prvente,
         'prixcomptoir':float(product.price),
         'prixmagazin':float(product.price2),
