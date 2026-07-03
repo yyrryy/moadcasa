@@ -14,7 +14,7 @@ class SalesHistory(DatedModel):
     # ismanual will be used to get facture created manually
     ismanual=models.BooleanField(default=False)
     retailer = models.ForeignKey(
-        'pis_retailer.Retailer', related_name='retailer_sales',on_delete=models.CASCADE
+        'pis_retailer.Retailer', related_name='retailer_sales',on_delete=models.SET_NULL, null=True, 
     )
     receipt_no = models.CharField(
         max_length=20, unique=True, blank=True, null=True
@@ -23,7 +23,7 @@ class SalesHistory(DatedModel):
     customer = models.ForeignKey(
         'pis_com.Customer',
         related_name='customer_sales',
-        blank=True, null=True,on_delete=models.CASCADE,
+        blank=True, null=True,on_delete=models.SET_NULL,
         default=None
     )
 
@@ -120,11 +120,11 @@ post_save.connect(create_save_receipt_no, sender=SalesHistory)
 
 class Avoir(DatedModel):
     bon = models.ForeignKey(
-        SalesHistory, related_name='bon_sortie_of_avoir',on_delete=models.CASCADE, default=None, blank=True, null=True
+        SalesHistory, related_name='bon_sortie_of_avoir',on_delete=models.SET_NULL, default=None, blank=True, null=True
     )
     dateavoir= models.DateTimeField(default=None, blank=True, null=True)
     retailer = models.ForeignKey(
-        'pis_retailer.Retailer', related_name='retailer_avoir',on_delete=models.CASCADE
+        'pis_retailer.Retailer', related_name='retailer_avoir',on_delete=models.SET_NULL, null=True, 
     )
     receipt_no = models.CharField(
         max_length=20, unique=True, blank=True, null=True
@@ -133,7 +133,7 @@ class Avoir(DatedModel):
     customer = models.ForeignKey(
         'pis_com.Customer',
         related_name='customer_avoir',
-        blank=True, null=True,on_delete=models.CASCADE
+        blank=True, null=True,on_delete=models.SET_NULL
     )
 
     returneditems = models.ManyToManyField(

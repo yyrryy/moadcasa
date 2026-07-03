@@ -31,7 +31,7 @@ class UserProfile(models.Model):
         (USER_TYPE_INDIVIDUAL, 'Individual'),
     )
 
-    user = models.OneToOneField(User, related_name='user_profile', on_delete=models.CASCADE)
+    user = models.OneToOneField(User, related_name='user_profile', on_delete=models.SET_NULL, null=True, )
     user_type = models.CharField(
         max_length=100, choices=USER_TYPES, default=USER_TYPE_SHOP
     )
@@ -79,7 +79,7 @@ class Customer(models.Model):
     retailer = models.ForeignKey(
         'pis_retailer.Retailer',
         related_name='retailer_customer',
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL, null=True, 
     )
     rest= models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
     customer_name = models.CharField(max_length=200)
@@ -88,7 +88,7 @@ class Customer(models.Model):
     ice=models.CharField(max_length=200, default='customer', blank=True, null=True)
     address = models.TextField(max_length=500, blank=True,null=True)
     shop = models.CharField(max_length=200, blank=True, null=True)
-    supplier=models.ForeignKey('pis_product.Supplier', related_name="supplierofclient", on_delete=models.CASCADE, default=None, blank=True, null=True)
+    supplier=models.ForeignKey('pis_product.Supplier', related_name="supplierofclient", on_delete=models.SET_NULL, null=True, default=None, blank=True)
 
     def __unicode__(self):
         return self.customer_name
@@ -108,7 +108,7 @@ class FeedBack(models.Model):
     retailer = models.ForeignKey(
         'pis_retailer.Retailer',
         related_name='retailer_feedback', null=True, blank=True,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL 
     )
     description= models.CharField(max_length=200, null=True, blank=True)
     date=date=models.DateField(default=timezone.now, null=True, blank=True)

@@ -1375,6 +1375,17 @@ table{
       }
     })
   }
+  function deletebon(event, bonid){
+    alertify.confirm("supprimer le bon?", ()=>{
+      $.get("/product/deletebon", {bonid:bonid}, (data)=>{
+          if (data.success){
+              location.reload()
+          }else{
+              alertify.error(data.error)
+          }
+      })
+    })
+  }
   function updateavoirdate(event, avoirid){
     date=$(event.target).parent().find('input[type="date"]').val()
     $.get('/product/updateavoirdate', {

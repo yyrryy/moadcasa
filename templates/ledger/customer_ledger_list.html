@@ -159,6 +159,17 @@
         </table>
 </div>
 <script>
+    function deleteclient(clientid){
+        alertify.confirm("supprimer le client?", ()=>{
+            $.get("/product/deleteclient", {clientid:clientid}, (data)=>{
+                if (data.success){
+                    location.reload()
+                }else{
+                    alertify.error(data.error)
+                }
+            })
+        })
+    }
 	$('.editsuppbtn').each((i, el)=>{
             $(el).on('click', ()=>{
                 id=$(el).attr('id')

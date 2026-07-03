@@ -4935,3 +4935,29 @@ def updateavoirdate(request):
     return JsonResponse({
         'success':True
     })
+
+def deleteclient(request):
+    clientid=request.GET.get("clientid")
+    customer = Customer.objects.get(pk=clientid)
+    if customer.sold()>0:
+        return JsonResponse ({
+            'success':False,
+            'error': 'client obtien de sold'
+        })
+    customer.delete()
+    return JsonResponse ({
+        'success':True,
+    })
+
+def deletebon(request):
+    bonid=request.GET.get("bonid")
+    bon = SalesHistory.objects.get(pk=bonid)
+    if bon.paid_amount>0 or PurchasedProduct.objects.filter(invoice=bon).exists():
+        return JsonResponse ({
+            'success':False,
+            'error': 'bon est regle ou obtien des article'
+        })
+    bon.delete()
+    return JsonResponse ({
+        'success':True,
+    })

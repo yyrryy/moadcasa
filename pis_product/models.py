@@ -41,7 +41,7 @@ class Supplier(models.Model):
     website = models.CharField(max_length=100, default=None, null=True, blank=True)
     total= models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
     rest= models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
-    client=models.ForeignKey(Customer, related_name="clientofsupplier", on_delete=models.CASCADE, default=None, blank=True, null=True)
+    client=models.ForeignKey(Customer, related_name="clientofsupplier", on_delete=models.SET_NULL, null=True, default=None, blank=True)
     def __str__(self) -> str:
         return self.name
     def totalstock(self):
@@ -59,7 +59,7 @@ class Supplier(models.Model):
         return round(totalbons-totalreglandavoirs, 2)
 
 class Avoirsupp(models.Model):
-    supplier=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None)
+    supplier=models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True,default=None)
     date = models.DateTimeField(default=timezone.now)
     items = models.TextField(blank=True, null=True, help_text='Quantity and Product name would save in JSON format')
     total = models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
@@ -86,7 +86,7 @@ post_save.connect(create_avoir_no, sender=Avoirsupp)
 
 
 class PaymentSupplier(models.Model):
-    supplier=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None)
+    supplier=models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True,default=None)
     date = models.DateTimeField(default=timezone.now)
     amount = models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
     mode=models.CharField(max_length=10, default=None)
@@ -103,8 +103,8 @@ class PaymentClient(models.Model):
     isfacture=models.BooleanField(default=False)
     ispaid=models.BooleanField(default=False)
     iscash=models.BooleanField(default=False)
-    facture=models.ForeignKey('Facture', on_delete=models.CASCADE, default=None, null=True, blank=True)
-    client=models.ForeignKey(Customer, on_delete=models.CASCADE, default=None)
+    facture=models.ForeignKey('Facture', on_delete=models.SET_NULL, null=True,default=None, blank=True)
+    client=models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True,default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     date = models.DateTimeField(default=timezone.now)
     amount = models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
@@ -113,7 +113,7 @@ class PaymentClient(models.Model):
     echeance=models.DateField(default=None, null=True)
     note=models.CharField(max_length=1000, default=None, null=True, blank=True)
     bons=models.ManyToManyField('pis_sales.SalesHistory', default=None, blank=True, related_name="bons_reglements")
-    bon=models.ForeignKey('pis_sales.SalesHistory', on_delete=models.CASCADE, blank=True, null=True, default=None, related_name="bonofreglements")
+    bon=models.ForeignKey('pis_sales.SalesHistory', on_delete=models.SET_NULL, null=True,blank=True, default=None, related_name="bonofreglements")
     @classmethod
     def totalclientbl(cls, customer):
         return cls.objects.filter(client=customer, isfacture=False).aggregate(
@@ -128,7 +128,7 @@ class PaymentClient(models.Model):
 
 # this acts as a bon achat
 class Itemsbysupplier(models.Model):
-    supplier= models.ForeignKey(Supplier, related_name='supplier',on_delete=models.CASCADE, default=None)
+    supplier= models.ForeignKey(Supplier, related_name='supplier',on_delete=models.SET_NULL, null=True,default=None)
     date = models.DateTimeField(auto_now_add=True)
     items = models.TextField(blank=True, null=True, help_text='Quantity and Product name would save in JSON format')
     total = models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
@@ -145,22 +145,22 @@ class Itemsbysupplier(models.Model):
 
 
 class Avancesbon(models.Model):
-    supplier = models.ForeignKey(Supplier, related_name='supplier_avance',on_delete=models.CASCADE, default=None)
+    supplier = models.ForeignKey(Supplier, related_name='supplier_avance',on_delete=models.SET_NULL, null=True,default=None)
     date = models.DateTimeField(auto_now_add=True)
     avance = models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
     details = models.CharField(max_length=100, blank=True, null=True)
     avoinbr = models.CharField(max_length=100, blank=True, null=True)
 
 class Category(models.Model):
-    parent = models.ForeignKey('self', related_name='children', on_delete=models.CASCADE, blank =
-    True, null=True)
+    parent = models.ForeignKey('self', related_name='children', on_delete=models.SET_NULL, null=True,blank =
+    True)
     name = models.CharField(max_length=100)
     def __str__(self) -> str:
         return self.name
 
 class SubCategory(models.Model):
     category = models.ForeignKey(
-        Category, related_name='category_subcategory',on_delete=models.CASCADE, default=None
+        Category, related_name='category_subcategory',on_delete=models.SET_NULL, null=True,default=None
     )
     name = models.CharField(max_length=100)
     def __str__(self) -> str:
@@ -172,14 +172,14 @@ class Mark(models.Model):
         return self.name
 
 class Product(models.Model):
-    category=models.ForeignKey(Category, on_delete=models.CASCADE, default=None)
+    category=models.ForeignKey(Category, on_delete=models.SET_NULL, null=True,default=None)
     name = models.CharField(max_length=5000)
     ref = models.CharField(max_length=5000, default=None, null=True, blank=True)
     brand_name = models.CharField(max_length=200, blank=True, null=True)
     stockfacture=models.FloatField(default=0.00)
     retailer = models.ForeignKey(
         'pis_retailer.Retailer',
-        related_name='retailer_product',on_delete=models.CASCADE, default=None
+        related_name='retailer_product',on_delete=models.SET_NULL, null=True,default=None
     )
     pr_achat=models.FloatField(default=0.00, null=True)
     # pr magazin
@@ -200,9 +200,9 @@ class Product(models.Model):
     qtycommand=models.FloatField(default=0.00)
     disponibleinother=models.BooleanField(default=False)
     # this is the supplier of the commande
-    supplier=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="command_supplier")
-    originsupp=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="original_supplier")
-    mark=models.ForeignKey(Mark, on_delete=models.CASCADE, default=None, null=True, blank=True, related_name="product_mark")
+    supplier=models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True,default=None, blank=True, related_name="command_supplier")
+    originsupp=models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True,default=None, blank=True, related_name="original_supplier")
+    mark=models.ForeignKey(Mark, on_delete=models.SET_NULL, null=True,default=None, blank=True, related_name="product_mark")
     stock=models.FloatField(default=0.00)
     minstock=models.FloatField(default=0.00)
     car = models.CharField(max_length=5000, blank=True, null=True, default=None)
@@ -234,7 +234,7 @@ class Product(models.Model):
 
 class Productscommand(models.Model):
     product = models.ForeignKey(
-        Product, related_name='productcommande',on_delete=models.CASCADE, default=None
+        Product, related_name='productcommande',on_delete=models.SET_NULL, null=True,default=None
     )
     qty=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
@@ -295,15 +295,15 @@ post_save.connect(create_save_bar_code, sender=Product)
 
 class StockIn(models.Model):
     product = models.ForeignKey(
-        Product, related_name='stockin_product',on_delete=models.CASCADE, default=None
+        Product, related_name='stockin_product',on_delete=models.SET_NULL, null=True,default=None
     )
     quantity = models.FloatField(default=0)
     price=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total=models.FloatField(default=0.00)
     remise=models.FloatField(default=0.00)
     dated_order = models.DateTimeField(auto_now_add=True)
-    reciept=models.ForeignKey(Itemsbysupplier, related_name='supplier_product',on_delete=models.CASCADE, default=None, null=True, blank=True)
-    avoir_reciept=models.ForeignKey(Avoir, related_name='avoir_product',on_delete=models.CASCADE, default=None, null=True, blank=True)
+    reciept=models.ForeignKey(Itemsbysupplier, related_name='supplier_product',on_delete=models.SET_NULL, null=True,default=None, blank=True)
+    avoir_reciept=models.ForeignKey(Avoir, related_name='avoir_product',on_delete=models.SET_NULL, null=True,default=None, blank=True)
     status=models.IntegerField(default=1)
     def __unicode__(self):
         return self.product.name
@@ -312,7 +312,7 @@ class StockIn(models.Model):
 
 class ProductDetail(DatedModel):
     product = models.ForeignKey(
-        Product, related_name='product_detail',on_delete=models.CASCADE, default=None
+        Product, related_name='product_detail',on_delete=models.SET_NULL, null=True,default=None
     )
     retail_price = models.DecimalField(
         max_digits=65, decimal_places=2, default=0
@@ -328,23 +328,23 @@ class ProductDetail(DatedModel):
 
 
 class Returned(models.Model):
-    product=models.ForeignKey(Product, on_delete=models.CASCADE, default=None)
+    product=models.ForeignKey(Product, on_delete=models.SET_NULL, null=True,default=None)
     qty=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     price=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    avoir=models.ForeignKey(Avoir, related_name='returned_invoice', on_delete=models.CASCADE, default=None, null=True, blank=True)
+    avoir=models.ForeignKey(Avoir, related_name='returned_invoice', on_delete=models.SET_NULL, null=True,default=None,blank=True)
     def __str__(self) -> str:
         return self.product.ref
 class PurchasedProduct(DatedModel):
     product = models.ForeignKey(
-        Product, related_name='purchased_product',on_delete=models.CASCADE, default=None
+        Product, related_name='purchased_product',on_delete=models.SET_NULL, null=True,default=None
     )
     invoice = models.ForeignKey(
         'pis_sales.SalesHistory', related_name='purchased_invoice',
-        blank=True, null=True,on_delete=models.CASCADE
+        blank=True, null=True,on_delete=models.SET_NULL 
     )
     isavoirsupp=models.BooleanField(default=False)
-    avoirsupp=models.ForeignKey(Avoirsupp, related_name='avoirsupp', on_delete=models.CASCADE, default=None, null=True, blank=True)
+    avoirsupp=models.ForeignKey(Avoirsupp, related_name='avoirsupp', on_delete=models.SET_NULL, null=True,default=None,blank=True)
     quantity = models.FloatField(default=1.00, blank=True, null=True
     )
     price = models.FloatField(default=0.00, blank=True, null=True
@@ -357,7 +357,7 @@ class PurchasedProduct(DatedModel):
 
 class ExtraItems(DatedModel):
     retailer = models.ForeignKey(
-        'pis_retailer.Retailer', related_name='retailer_extra_items',on_delete=models.CASCADE, default=None
+        'pis_retailer.Retailer', related_name='retailer_extra_items',on_delete=models.SET_NULL, null=True,default=None
     )
     item_name = models.CharField(
         max_length=100, blank=True, null=True)
@@ -375,10 +375,10 @@ class ExtraItems(DatedModel):
 
 
 class ClaimedProduct(DatedModel):
-    product = models.ForeignKey(Product, related_name='claimed_product',on_delete=models.CASCADE, default=None)
+    product = models.ForeignKey(Product, related_name='claimed_product',on_delete=models.SET_NULL, null=True,default=None)
     customer = models.ForeignKey(
         'pis_com.Customer', related_name='customer_claimed_items',
-        null=True, blank=True,on_delete=models.CASCADE
+        null=True, blank=True,on_delete=models.SET_NULL 
     )
     claimed_items = models.IntegerField(
         default=1, verbose_name='No. of Claimed Items')
@@ -391,15 +391,15 @@ class ClaimedProduct(DatedModel):
 
 class StockOut(models.Model):
     product = models.ForeignKey(
-        Product, related_name='stockout_product',on_delete=models.CASCADE, default=None
+        Product, related_name='stockout_product',on_delete=models.SET_NULL, null=True,default=None
     )
     invoice = models.ForeignKey(
         'pis_sales.SalesHistory', related_name='out_invoice',
-        blank=True, null=True,on_delete=models.CASCADE
+        blank=True, null=True,on_delete=models.SET_NULL
     )
     purchased_item = models.ForeignKey(
         PurchasedProduct, related_name='out_purchased',
-        blank=True, null=True,on_delete=models.CASCADE
+        blank=True, null=True,on_delete=models.SET_NULL
     )
     stock_out_quantity=models.CharField(max_length=100, blank=True, null=True)
     selling_price = models.DecimalField(
@@ -428,15 +428,15 @@ def purchase_product(sender, instance, created, **kwargs):
         item.save()
 # this class <ill track client prices to use in avoir
 class Clientprice(models.Model):
-    client=models.ForeignKey('pis_com.Customer', on_delete=models.CASCADE, default=None, null=True, blank=True)
-    product=models.ForeignKey(Product, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    client=models.ForeignKey('pis_com.Customer', on_delete=models.SET_NULL, null=True,default=None, blank=True)
+    product=models.ForeignKey(Product, on_delete=models.SET_NULL, null=True,default=None, blank=True)
     price=models.FloatField(default=0.00, blank=True, null=True)
     qty=models.FloatField(default=0.00, blank=True, null=True)
 
 
 class Supplierprice(models.Model):
-    supplier=models.ForeignKey(Supplier, on_delete=models.CASCADE, default=None, null=True, blank=True)
-    product=models.ForeignKey(Product, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    supplier=models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True,default=None, blank=True)
+    product=models.ForeignKey(Product, on_delete=models.SET_NULL, null=True,default=None, blank=True)
     price=models.FloatField(default=0.00, blank=True, null=True)
     qty=models.IntegerField(default=0, blank=True, null=True)
     remise=models.IntegerField(default=0, blank=True, null=True)
@@ -489,16 +489,16 @@ class Facture(models.Model):
         )['total_bon_sum'] or 0  # Return 0 if no bons exist
 
 class Outfacture(models.Model):
-    facture=models.ForeignKey(Facture, on_delete=models.CASCADE, default=None)
+    facture=models.ForeignKey(Facture, on_delete=models.SET_NULL, null=True,default=None)
     total=models.FloatField(default=0.00)
-    product=models.ForeignKey(Product, on_delete=models.CASCADE, default=None, null=True)
+    product=models.ForeignKey(Product, on_delete=models.SET_NULL, null=True,default=None)
     remise=models.CharField(max_length=100, null=True, default=None)
     ref=models.CharField(max_length=100, null=True, default=None)
     name=models.CharField(max_length=100, null=True, default=None)
     qty=models.IntegerField()
     # this total represents the revenue of this product
     price=models.FloatField(default=0.00)
-    client=models.ForeignKey(Customer, on_delete=models.CASCADE, default=None, null=True, blank=True)
+    client=models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True,default=None, blank=True)
     date=models.DateField(default=None, blank=True, null=True)
     
 class Devise(models.Model):
