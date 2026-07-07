@@ -22,9 +22,15 @@
                             <input type="text" class="form-control" name="pphone1" required>
                             <br>
                             <label>
-                                <strong>Adresse</strong>
+                                <strong>Address</strong>
                             </label>
                             <input type="text" class="form-control" name="paddress">
+                            <br>
+                            <label>
+                                <strong>plafon</strong>
+                            </label>
+                            <input type="text" class="form-control" name="pplafon">
+                            
                             <br>
                             <label>
                                 <strong>ICE</strong>
@@ -178,6 +184,7 @@
                     $('[name="pname"]').val(data.name)
                     $('[name="pphone1"]').val(data.phone1)
                     $('[name="paddress"]').val(data.address)
+                    $('[name="pplafon"]').val(data.plafon)
                     $('[name="pice"]').val(data.ice)
                 }
                 )

@@ -81,6 +81,7 @@ class Customer(models.Model):
         related_name='retailer_customer',
         on_delete=models.SET_NULL, null=True, 
     )
+    plafon=models.FloatField(default=1000.00)
     rest= models.DecimalField(max_digits=65, decimal_places=2, default=0.00)
     customer_name = models.CharField(max_length=200)
     customer_phone = models.CharField(max_length=20, blank=True, null=True)

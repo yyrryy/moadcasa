@@ -144,9 +144,7 @@
 <script src="{% static 'js/jquery.invoice.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/jquery.scannerdetection.js' %}"></script>
     <script>
-        function showerror(m){
-            $('.item-error').show().text(m)
-        }
+        
         $('.loading').removeClass('d-none').addClass('d-flex');
         
         $('.addsupplierform').on('submit', function (e) {

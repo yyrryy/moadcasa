@@ -571,12 +571,13 @@ def getsupplierdata(request):
 @csrf_exempt
 def getclientdata(request):
     id=request.POST.get('id')
-    supplier=Customer.objects.get(pk=id)
+    client=Customer.objects.get(pk=id)
     return JsonResponse({
-        'name':supplier.customer_name,
-        'phone1':supplier.customer_phone,
-        'address':supplier.address,
-        'ice':supplier.ice,
+        'name':client.customer_name,
+        'phone1':client.customer_phone,
+        'address':client.address,
+        'plafon':client.plafon,
+        'ice':client.ice,
     })
 
 
@@ -950,8 +951,8 @@ def addclient(request):
     address=request.GET.get('address')
     ice=request.GET.get('ice')
     sold=request.GET.get('sold') or 0
-    print(">>>",request.GET, name, phone, address, ice)
-    client=Customer.objects.create(rest=sold, customer_name=name,customer_phone=phone, address=address, ice=ice, retailer=Retailer.objects.get(id=request.user.retailer_user.retailer.id))
+    plafon=request.GET.get('plafon') or 1000
+    client=Customer.objects.create(rest=sold, customer_name=name,customer_phone=phone, address=address, ice=ice, plafon=plafon, retailer=Retailer.objects.get(id=request.user.retailer_user.retailer.id))
     return JsonResponse({'status':True, 'id':client.id})
 
 def checkclient(request):
@@ -2718,12 +2719,13 @@ def editsupp(request):
     return redirect('product:supplierslist')
 
 def editclient(request):
-    supp=Customer.objects.get(pk=request.POST.get('pid'))
-    supp.customer_name=request.POST.get('pname')
-    supp.customer_phone=request.POST.get('pphone1')
-    supp.address=request.POST.get('paddress')
-    supp.ice=request.POST.get('pice')
-    supp.save()
+    client=Customer.objects.get(pk=request.POST.get('pid'))
+    client.customer_name=request.POST.get('pname')
+    client.customer_phone=request.POST.get('pphone1')
+    client.address=request.POST.get('paddress')
+    client.plafon=request.POST.get('pplafon')
+    client.ice=request.POST.get('pice')
+    client.save()
     return redirect('ledger:customer_ledger_list')
 
 def dailystats(request):
@@ -3405,7 +3407,6 @@ def getproductdata(request):
         'prnet':product.prnet,
         'lowpriceachat':lowprice,
         'highpriceachat':highprice,
-        # 'highpriceachatdate':highprice.receipt.date.strftime("d/m/Y"),
         'prixgro':product.prvente,
         'prixcomptoir':float(product.price),
         'prixmagazin':float(product.price2),
@@ -4747,6 +4748,7 @@ def genererdevistobonpage(request):
 
 def soldclient(request):
     id=request.GET.get('id')
+    client=Customer.objects.get(pk=id)
     bons = SalesHistory.objects.filter(customer_id=id)
     avoirs = Avoir.objects.filter(customer_id=id)
     payments=PaymentClient.objects.filter(client_id=id)
@@ -4755,7 +4757,8 @@ def soldclient(request):
     sold=float(totalbons)-float(totalcredit)
 
     return JsonResponse({
-        'sold':sold
+        'sold':sold,
+        'plafon':client.plafon
     })
 
 def searchclient(request):

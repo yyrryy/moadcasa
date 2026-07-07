@@ -1233,6 +1233,9 @@ table{
 
 
 <script>
+  function showerror(m){
+    $('.item-error').show().text(m)
+  }
   function getbuyprices(id){
     $.get(`/product/getbuyprices?id=${id}`,
     function(data){

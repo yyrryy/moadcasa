@@ -399,11 +399,17 @@
                 $('.productslistholder').addClass('d-none')
             }
             else{
-                $('.productslistholder').removeClass('d-none')
+                
                 // we store olse client id to display it when loading from localstorage
                 localStorage.setItem('clientbon', $(this).val())
                 $.get('/product/soldclient', {'id': $(this).val()}, (data) => {
-                    $('.soldclient').text(data.sold);
+                    if (data.sold <= data.plafon){
+                        $('.soldclient').text(data.sold);
+                        $('.productslistholder').removeClass('d-none')
+                    }else{
+                        showerror(`sold client ${data.sold} depasser le plafond`)
+                        $('.productslistholder').addClass('d-none')
+                    }
                 });
             }
         })
