@@ -4965,3 +4965,17 @@ def deletebon(request):
     return JsonResponse ({
         'success':True,
     })
+
+def deletecategory(request):
+    categoryid=request.GET.get("categoryid")
+    print('>> categoryid', categoryid)
+    category = Category.objects.get(pk=categoryid)
+    if Product.objects.filter(category=category).exists():
+        return JsonResponse ({
+            'success':False,
+            'error': 'category obtien des article'
+        })
+    category.delete()
+    return JsonResponse ({
+        'success':True,
+    })

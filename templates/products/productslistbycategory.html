@@ -156,6 +156,7 @@
                                 </b>
                             </a>
                             <button class=" btn-xs btn updatecategorybtn fa fa-edit" child="{{i.name}}" id="{{i.id}}" parent="{{i.parent}}" data-bs-toggle="modal" data-bs-target="#updatecategorymodal"></button>
+                            <button class=" btn-xs btn deletecategorybtn fa fa-times" child="{{i.name}}" id="{{i.id}}" parent="{{i.parent}}" onclick="deletecategory('{{i.id}}')"></button>
 
                         </li>
                         {% endfor %}
@@ -343,6 +344,21 @@
 {% endblock %}
 {% block scripts %}
 <script>
+    function deletecategory(categoryid){
+        alertify.confirm("Supprimer la categorie", "Voulez vous vraiment supprimer cette categorie ?",
+        function(){
+            $.get('/product/deletecategory/', {'categoryid':categoryid}, (data)=>{
+                if (data.success){
+                    location.reload()
+                }else{
+                    alertify.error(data.error)
+                }
+            })
+        },
+        function(){
+            alertify.error('Annulé')
+        });
+    }
     let currentPagepdcts = 1;
     let loadingpdcts = false;
     function handleScrollpdcts () {
